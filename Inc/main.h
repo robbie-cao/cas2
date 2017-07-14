@@ -55,6 +55,9 @@
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
+#define COMM_RECV_BUF_MAX    16
+#define COMM_SEND_BUF_MAX    256
+#define REC_TIM_DELAY           5
 
 /* USER CODE BEGIN Private defines */
 
