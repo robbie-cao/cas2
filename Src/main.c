@@ -87,6 +87,9 @@ UART_HandleTypeDef huart6;
 SRAM_HandleTypeDef hsram1;
 
 osThreadId defaultTaskHandle;
+osThreadId sensorTaskHandle;
+osThreadId commTaskHandle;
+osThreadId displayTaskHandle;
 
 uint32_t tim3_count = 0;
 uint8_t sensor_current = 0xFF;
@@ -134,6 +137,9 @@ static void MX_USART3_UART_Init(void);
 static void MX_USART6_UART_Init(void);
 static void MX_TIM3_Init(void);
 void StartDefaultTask(void const * argument);
+void SensorTask(void const * argument);
+void CommTask(void const * argument);
+void DisplayTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -264,6 +270,15 @@ int main(void)
   /* definition and creation of defaultTask */
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+
+  osThreadDef(displayTask, DisplayTask, osPriorityNormal, 0, 128);
+  displayTaskHandle = osThreadCreate(osThread(displayTask), NULL);
+
+  osThreadDef(sensorTask, SensorTask, osPriorityNormal, 0, 128);
+  sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
+
+  osThreadDef(commTask, CommTask, osPriorityAboveNormal, 0, 128);
+  commTaskHandle = osThreadCreate(osThread(commTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -609,9 +624,38 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+void CommTask(void const * argument)
+{
+  /* Infinite loop */
+  for(;;)
+  {
+    if(comm_rcv_flag)
+    {
+      Comm_Process();
+      comm_rcv_flag = 0;
+      Comm_Response();
+    } else {
+      vTaskDelay(1);
+    }
+  }
+}
 
-/* StartDefaultTask function */
-void StartDefaultTask(void const * argument)
+void SensorTask(void const * argument)
+{
+  /* Infinite loop */
+  for(;;)
+  {
+    printf("s");
+    // Read sensor data
+    Get_VocData(&g_co2, &g_voc);
+    Get_HumiTemp(&g_humidity, &g_temperature);
+//    S8_Read(&g_co2);
+//    PM25_Read(&g_pm25, &g_pm10);
+    vTaskDelay(2000);
+  }
+}
+
+void DisplayTask(void const * argument)
 {
   float curval;
   uint16_t myval;
@@ -623,6 +667,7 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
+#if 0
     if(comm_rcv_flag)
     {
       Comm_Process();
@@ -638,7 +683,12 @@ void StartDefaultTask(void const * argument)
     Get_HumiTemp(&g_humidity, &g_temperature);
 //    S8_Read(&g_co2);
 //    PM25_Read(&g_pm25, &g_pm10);
+#endif
 
+    if (sensor_current == sensor_next) {
+      vTaskDelay(10);
+      continue ;
+    }
     LCD_Clear(BLACK);
     //LCD_MaskImage(0,0,480,320, BLACK);
     POINT_COLOR=WHITE;
@@ -717,6 +767,18 @@ void StartDefaultTask(void const * argument)
   /* USER CODE END 5 */
 }
 
+/* StartDefaultTask function */
+void StartDefaultTask(void const * argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(100);
+  }
+  /* USER CODE END 5 */
+}
+
 /**
   * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM2 interrupt took place, inside
@@ -772,7 +834,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
   /* Set transmission flag: transfer complete*/
-//  printf("%c", one_byte);
+  printf("%c", one_byte);
   if(!comm_rcv_flag)
   {
     recv_comm_buf[recv_comm_idx++] = one_byte;
