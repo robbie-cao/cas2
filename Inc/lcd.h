@@ -8,19 +8,19 @@
 
 
 /* Pin definitions */
-#define LCD_RST_PORT      GPIOC
-#define LCD_RST_PIN       GPIO_PIN_6
-#define LCD_RST_CLK_ENABLE()           __HAL_RCC_GPIOC_CLK_ENABLE()
-#define LCD_RST_CLK_DISABLE()          __HAL_RCC_GPIOC_CLK_DISABLE()
+#define LCD_RST_PORT      GPIOF
+#define LCD_RST_PIN       GPIO_PIN_10
+#define LCD_RST_CLK_ENABLE()           __HAL_RCC_GPIOF_CLK_ENABLE()
+#define LCD_RST_CLK_DISABLE()          __HAL_RCC_GPIOF_CLK_DISABLE()
 
 #define LCD_RST_SET			HAL_GPIO_WritePin(LCD_RST_PORT, LCD_RST_PIN, GPIO_PIN_SET)
 #define LCD_RST_RESET			HAL_GPIO_WritePin(LCD_RST_PORT, LCD_RST_PIN, GPIO_PIN_RESET)
 
 
-#define LCD_BKL_PORT      GPIOC
-#define LCD_BKL_PIN       GPIO_PIN_5
-#define LCD_BKL_CLK_ENABLE()           __HAL_RCC_GPIOC_CLK_ENABLE()
-#define LCD_BKL_CLK_DISABLE()          __HAL_RCC_GPIOC_CLK_DISABLE()
+#define LCD_BKL_PORT      GPIOF
+#define LCD_BKL_PIN       GPIO_PIN_9
+#define LCD_BKL_CLK_ENABLE()           __HAL_RCC_GPIOF_CLK_ENABLE()
+#define LCD_BKL_CLK_DISABLE()          __HAL_RCC_GPIOF_CLK_DISABLE()
 
 #define LCD_BKL_SET			HAL_GPIO_WritePin(LCD_BKL_PORT, LCD_BKL_PIN, GPIO_PIN_SET)
 #define LCD_BKL_RESET			HAL_GPIO_WritePin(LCD_BKL_PORT, LCD_BKL_PIN, GPIO_PIN_RESET)
@@ -184,7 +184,7 @@ void LCD_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint16_t *pBmp);
 void LCD_ShowImage(uint16_t Xpos, uint16_t Ypos, uint16_t width, uint16_t height, uint8_t *pBmp);
 void LCD_MaskImage(uint16_t Xpos, uint16_t Ypos, uint16_t width, uint16_t height, uint16_t color);
 void LCD_ShowSlide(uint8_t index);
-void LCD_ShowDot(void);   
+void LCD_ShowDot(void);
 void LCD_ShowDigtStr(u8 *p, uint8_t dot_flag, uint8_t bit_width);
 
 #endif
