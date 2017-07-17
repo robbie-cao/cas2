@@ -62,7 +62,7 @@ void Get_HumiTemp(float* rh, float* tc)
     *tc = (float)temp * 1.007e-2 - 40.0;
   } else {
     /* Render certain error values to display */
-    *rh = -1.0;
-    *tc = -1.0;
+    *rh = 25.0;
+    *tc = 70.0;
   }
 }
