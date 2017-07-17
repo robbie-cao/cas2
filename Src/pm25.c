@@ -1,10 +1,11 @@
 #include <string.h>
 #include "pm25.h"
+#include "main.h"
 
 #define TIMEOUT         500
-#define PORT    huart2
 
 extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart3;
 
 uint8_t PM25_EnableAutoSend(void)
 {
@@ -12,8 +13,8 @@ uint8_t PM25_EnableAutoSend(void)
   uint8_t rcv[8];
 
   memset(rcv, 0, sizeof(rcv));
-  HAL_UART_Transmit(&PORT, cmd, 4, TIMEOUT);
-  HAL_UART_Receive(&PORT, rcv, 2, TIMEOUT);
+  HAL_UART_Transmit(&PM25_UART, cmd, 4, TIMEOUT);
+  HAL_UART_Receive(&PM25_UART, rcv, 2, TIMEOUT);
 //  for (int i = 0; i < 2; i++) {
 //    printf("0x%02x ", rcv[i]);
 //  }
@@ -31,8 +32,8 @@ uint8_t PM25_StopAutoSend(void)
   uint8_t rcv[8];
 
   memset(rcv, 0, sizeof(rcv));
-  HAL_UART_Transmit(&PORT, cmd, 4, TIMEOUT);
-  HAL_UART_Receive(&PORT, rcv, 2, TIMEOUT);
+  HAL_UART_Transmit(&PM25_UART, cmd, 4, TIMEOUT);
+  HAL_UART_Receive(&PM25_UART, rcv, 2, TIMEOUT);
 //  for (int i = 0; i < 2; i++) {
 //    printf("0x%02x ", rcv[i]);
 //  }
@@ -50,8 +51,8 @@ uint8_t PM25_StartMeasurement(void)
   uint8_t rcv[8];
 
   memset(rcv, 0, sizeof(rcv));
-  HAL_UART_Transmit(&PORT, cmd, 4, TIMEOUT);
-  HAL_UART_Receive(&PORT, rcv, 2, TIMEOUT);
+  HAL_UART_Transmit(&PM25_UART, cmd, 4, TIMEOUT);
+  HAL_UART_Receive(&PM25_UART, rcv, 2, TIMEOUT);
 //  for (int i = 0; i < 2; i++) {
 //    printf("0x%02x ", rcv[i]);
 //  }
@@ -69,8 +70,8 @@ uint8_t PM25_StopMeasurement(void)
   uint8_t rcv[8];
 
   memset(rcv, 0, sizeof(rcv));
-  HAL_UART_Transmit(&PORT, cmd, 4, TIMEOUT);
-  HAL_UART_Receive(&PORT, rcv, 2, TIMEOUT);
+  HAL_UART_Transmit(&PM25_UART, cmd, 4, TIMEOUT);
+  HAL_UART_Receive(&PM25_UART, rcv, 2, TIMEOUT);
 //  for (int i = 0; i < 2; i++) {
 //    printf("0x%02x ", rcv[i]);
 //  }
@@ -88,8 +89,8 @@ uint8_t PM25_Read(uint16_t *pm25, uint16_t *pm10)
   uint8_t rcv[8];
 
   memset(rcv, 0, sizeof(rcv));
-  HAL_UART_Transmit(&PORT, cmd, 4, TIMEOUT);
-  HAL_UART_Receive(&PORT, rcv, 8, TIMEOUT);
+  HAL_UART_Transmit(&PM25_UART, cmd, 4, TIMEOUT);
+  HAL_UART_Receive(&PM25_UART, rcv, 8, TIMEOUT);
 //  for (int i = 0; i < 8; i++) {
 //    printf("0x%02x ", rcv[i]);
 //  }

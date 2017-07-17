@@ -59,6 +59,10 @@
 #define COMM_SEND_BUF_MAX    256
 #define REC_TIM_DELAY           50
 
+#define WIFI_COMM_UART          huart3  // -> uart6
+#define CO2_S8_UART             huart2  // -> uart3
+#define PM25_UART               huart2  // -> uart2
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

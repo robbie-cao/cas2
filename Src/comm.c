@@ -3,6 +3,7 @@
 
 #include "stm32f4xx_hal.h"
 #include "comm.h"
+#include "main.h"
 
 uint8_t temp_id_str[2];
 
@@ -16,6 +17,7 @@ uint8_t temp_id_str[2];
 unsigned char g_ucaSeriNo[UNIQUE_ID_LEN];
 uint8_t comm_send_len = 0;
 
+extern uint8_t one_byte;
 
 extern uint8_t recv_comm_buf[];
 extern uint8_t send_comm_buf[];
@@ -25,6 +27,7 @@ extern uint8_t rcv_tim_delay;
 extern uint8_t comm_rcv_flag;
 
 extern UART_HandleTypeDef huart3;
+extern UART_HandleTypeDef huart6;
 
 
 extern float g_humidity, g_temperature;
@@ -374,6 +377,7 @@ void Clear_Rcv_Buf(void)
 
 void Comm_Init(void)
 {
+  // Init SN.
   unsigned char i;
 //  for(i = 0; i<UNIQUE_ID_LEN; i++)
 //  {
@@ -383,6 +387,18 @@ void Comm_Init(void)
   for (i = 0; i < 3; i++) {
     *p++ = B2L(STM32_UUID[i]);
   }
+
+  /* Initialize recv_comm_buf */
+  for(int i=0;i<COMM_RECV_BUF_MAX;i++)
+  {
+    recv_comm_buf[i] = 0;
+  }
+  recv_comm_idx = 0;
+  start_rcv_timer = 0;
+  rcv_tim_delay = 0;
+  comm_rcv_flag = 0;
+
+  HAL_UART_Receive_IT(&WIFI_COMM_UART, &one_byte, 1);
 }
 
 /* Process the incoming command, one piece at a time */
@@ -496,8 +512,7 @@ void Comm_Process(void)
 void Comm_Response(void)
 {
   printf("Resp\r\n");
-//  HAL_UART_Transmit(&huart3, "ACK\r\n", 5, 1000);
-  uint8_t res = HAL_UART_Transmit(&huart3, send_comm_buf, comm_send_len, 1000);
+  uint8_t res = HAL_UART_Transmit(&WIFI_COMM_UART, send_comm_buf, comm_send_len, 1000);
   printf("%d - %d: %s\r\n", res, comm_send_len, send_comm_buf);
   comm_send_len = 0;
 }

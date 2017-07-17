@@ -239,8 +239,6 @@ int main(void)
     Error_Handler();
   }
 
-  HAL_UART_Receive_IT(&huart3, &one_byte, 1);
-
   POINT_COLOR=WHITE;
   //          LCD_Switch_Off();
 
@@ -510,15 +508,6 @@ static void MX_USART3_UART_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /* Initialize recv_comm_buf */
-    for(int i=0;i<COMM_RECV_BUF_MAX;i++)
-    {
-        recv_comm_buf[i] = 0;
-    }
-    recv_comm_idx = 0;
-    start_rcv_timer = 0;
-    rcv_tim_delay = 0;
-    comm_rcv_flag = 0;
 }
 
 /* USART6 init function */
@@ -833,19 +822,21 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
   */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
-  /* Set transmission flag: transfer complete*/
-  printf("%c", one_byte);
-  if(!comm_rcv_flag)
-  {
-    recv_comm_buf[recv_comm_idx++] = one_byte;
-    if(recv_comm_idx == COMM_RECV_BUF_MAX)
+  if (UartHandle->Instance == WIFI_COMM_UART.Instance) {
+    /* Set transmission flag: transfer complete*/
+    printf("%c", one_byte);
+    if(!comm_rcv_flag)
     {
-      recv_comm_idx = 0;
+      recv_comm_buf[recv_comm_idx++] = one_byte;
+      if(recv_comm_idx == COMM_RECV_BUF_MAX)
+      {
+        recv_comm_idx = 0;
+      }
     }
+    start_rcv_timer = 1;
+    rcv_tim_delay = 0;
+    HAL_UART_Receive_IT(&WIFI_COMM_UART, &one_byte, 1);
   }
-  start_rcv_timer = 1;
-  rcv_tim_delay = 0;
-  HAL_UART_Receive_IT(&huart3, &one_byte, 1);
 
 }
 
