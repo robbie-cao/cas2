@@ -104,7 +104,7 @@ uint8_t rcv_tim_delay;
 uint8_t comm_rcv_flag;
 
 float g_humidity = 0.0, g_temperature = 0.0;
-uint16_t g_co2 = 500, g_voc = 120, g_pm25 = 50, g_pm10 = 50;
+uint16_t g_co2 = 800, g_voc = 120, g_pm25 = 150, g_pm10 = 50;
 
 struct LCD_Screen
 {
@@ -711,19 +711,18 @@ void DisplayTask(void const * argument)
       if (sensor_next == 1) {
         myval=(uint16_t)g_humidity;
       } else if (sensor_next == 2) {
-        //                myval=g_co2;
-        myval=536;
-        if (myval > 750) {
+        myval=g_co2;
+        if (myval > CO2_THRESHOLD) {
           POINT_COLOR=RED;
         }
       } else if (sensor_next == 3) {
         myval=g_voc;
-        if (myval > 375) {
+        if (myval > TVOC_THRESHOLD) {
           POINT_COLOR=RED;
         }
       } else if (sensor_next == 4) {
-        myval=187;
-        if (myval > 100) {
+        myval=g_pm25;
+        if (myval > PM25_THRESHOLD) {
           POINT_COLOR=RED;
         }
       } else {

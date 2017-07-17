@@ -63,6 +63,10 @@
 #define CO2_S8_UART             huart2  // -> uart3
 #define PM25_UART               huart2  // -> uart2
 
+#define PM25_THRESHOLD          100
+#define TVOC_THRESHOLD          375
+#define CO2_THRESHOLD           750
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
