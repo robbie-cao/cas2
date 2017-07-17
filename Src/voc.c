@@ -2,6 +2,8 @@
 #include "voc.h"
 #include "i2c.h"
 
+uint16_t voc_old = 120;
+
 #define IAQ_CORE_I2C_ADDRESS    (0x5A << 1)
 
 void Voc_Init(void)
@@ -54,9 +56,10 @@ void Get_VocData(uint16_t* pDataCO2 ,uint16_t* pDataVOC)
   if (Read_VocData(&co2, &voc)) {
     *pDataCO2 = (uint16_t)co2;
     *pDataVOC = (uint16_t)voc;
+    voc_old = voc;
   } else {
     /* Render certain error values to display */
     *pDataCO2 = 0;
-    *pDataVOC = 0;
+    *pDataVOC = voc_old;
   }
 }
