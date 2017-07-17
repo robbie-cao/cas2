@@ -272,7 +272,7 @@ int main(void)
   osThreadDef(displayTask, DisplayTask, osPriorityNormal, 0, 128);
   displayTaskHandle = osThreadCreate(osThread(displayTask), NULL);
 
-  osThreadDef(sensorTask, SensorTask, osPriorityNormal, 0, 128);
+  osThreadDef(sensorTask, SensorTask, osPriorityNormal, 0, 256);
   sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
 
   osThreadDef(commTask, CommTask, osPriorityAboveNormal, 0, 128);
@@ -496,7 +496,7 @@ static void MX_USART3_UART_Init(void)
 {
 
   huart3.Instance = USART3;
-  huart3.Init.BaudRate = 115200;
+  huart3.Init.BaudRate = 9600;
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
   huart3.Init.StopBits = UART_STOPBITS_1;
   huart3.Init.Parity = UART_PARITY_NONE;
@@ -640,8 +640,10 @@ void SensorTask(void const * argument)
     // Read sensor data
     Get_VocData(&temp, &g_voc);
     Get_HumiTemp(&g_humidity, &g_temperature);
-//    S8_Read(&g_co2);
+    S8_Read(&g_co2);
 //    PM25_Read(&g_pm25, &g_pm10);
+    printf("T: %.1f, H: %.1f, V: %d\r\n", g_temperature, g_humidity, g_voc);
+    printf("CO2: %d, PM25: %d\r\n", g_co2, g_pm25);
     vTaskDelay(2000);
   }
 }
