@@ -631,12 +631,14 @@ void CommTask(void const * argument)
 
 void SensorTask(void const * argument)
 {
+  uint16_t temp;
+
   /* Infinite loop */
   for(;;)
   {
     printf("s");
     // Read sensor data
-    Get_VocData(&g_co2, &g_voc);
+    Get_VocData(&temp, &g_voc);
     Get_HumiTemp(&g_humidity, &g_temperature);
 //    S8_Read(&g_co2);
 //    PM25_Read(&g_pm25, &g_pm10);
