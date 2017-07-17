@@ -2,7 +2,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define I2C_TIMEOUT     10000
+#define I2C_TIMEOUT     1000
 
 extern I2C_HandleTypeDef hi2c1;
 
