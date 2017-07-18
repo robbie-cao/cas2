@@ -1,6 +1,6 @@
 #include "lcd.h"
 #include "stdlib.h"
-#include "lcd_font.h" 
+#include "lcd_font.h"
 #include "slide.h"
 
 
@@ -79,7 +79,7 @@ u32 LCD_ReadPoint(u16 x,u16 y)
 {
  	u16 r=0,g=0,b=0;
 	if(x>=lcddev.width||y>=lcddev.height)return 0;	//超过了范围,直接返回
-	LCD_SetCursor(x,y,x,y);	    
+	LCD_SetCursor(x,y,x,y);
 	LCD_WR_REG(0X2E); // 发送读GRAM指令
  	r=LCD_RD_DATA();								//dummy Read
 	opt_delay(2);
@@ -138,7 +138,7 @@ void LCD_Scroll_On(uint8_t mode)
            LCD_WR_DATA(index & 0xFF);
            LCD_Delay(10000);
           }
-          
+
         }
 }
 
@@ -420,7 +420,7 @@ void LCD_Color_Fill(u16 sx,u16 sy,u16 ex,u16 ey,u16 *color)
 	height=ey-sy+1;			//高度
 	for(i=0;i<height;i++)
 	{
-		LCD_SetCursor(sx,sy+i,sx,sy+i);   	//设置光标位置 
+		LCD_SetCursor(sx,sy+i,sx,sy+i);   	//设置光标位置
 		LCD_WriteRAM_Prepare();     //开始写入GRAM
 		for(j=0;j<width;j++)LCD->LCD_RAM=color[i*width+j];//写入数据
 	}
@@ -546,19 +546,19 @@ void LCD_ShowChar(u16 x,u16 y,u8 num,u8 size,u8 mode)
 	}
 }
 void LCD_ShowDigit(u16 x,u16 y,u8 num,u16 size,u8 mode)
-{  							  
+{
         u16 temp,t1,t;
 	u16 y0=y;
-	u16 csize=(size/8+((size%8)?1:0))*(size/2);		//得到字体一个字符对应点阵集所占的字节数	
+	u16 csize=(size/8+((size%8)?1:0))*(size/2);		//得到字体一个字符对应点阵集所占的字节数
 
  	num=num-0x30;
- 
+
 	for(t=0;t<csize;t++)
-	{   
+	{
 	       temp=digit[num][t];
- 
+
 		for(t1=0;t1<8;t1++)
-		{			    
+		{
 			if(temp&0x80)LCD_Fast_DrawPoint(x,y,POINT_COLOR);
 			else if(mode==0)LCD_Fast_DrawPoint(x,y,BACK_COLOR);
 			temp<<=1;
@@ -571,13 +571,13 @@ void LCD_ShowDigit(u16 x,u16 y,u8 num,u16 size,u8 mode)
 				if(x>=lcddev.width)return;	//超区域了
 				break;
 			}
-		}  	 
-	}  	    	   	 	  
-}   
+		}
+	}
+}
 
 
 void LCD_ShowDigtStr(u8 *p, uint8_t dot_flag, uint8_t bit_width)
-{         
+{
     uint16_t cur_xpos, cur_ypos;
     cur_xpos=DIGIT_XPOS;
     cur_ypos=DIGIT_YPOS;
@@ -591,15 +591,15 @@ void LCD_ShowDigtStr(u8 *p, uint8_t dot_flag, uint8_t bit_width)
         default: cur_xpos=DIGIT_XPOS;
                  break;
      }
-    
+
     if(dot_flag == 1)
    {
- 
+
           cur_xpos-=DOT_XPOS_ADJ;
    }
-       
+
     while(*p!=NULL)
-    {       
+    {
          if((*p>='0') && (*p<='9'))
          {
              LCD_ShowDigit(cur_xpos, cur_ypos, *p, DIGIT_HEIGHT,1);
@@ -611,7 +611,7 @@ void LCD_ShowDigtStr(u8 *p, uint8_t dot_flag, uint8_t bit_width)
          }
          cur_xpos+=DIGIT_WIDTH;
          p++;
-    }  
+    }
 }
 
 u32 LCD_Pow(u8 m,u8 n)
@@ -779,7 +779,7 @@ void LCD_MaskImage(uint16_t Xpos, uint16_t Ypos, uint16_t width, uint16_t height
      {
          LCD_Fast_DrawPoint(Xpos+i,Ypos+k,color);
          LCD_Fast_DrawPoint(Xpos+width-i-1,Ypos+k,color);
-         LCD_Delay(100);
+         //LCD_Delay(100);
      }
    }
 
@@ -790,7 +790,7 @@ void LCD_ShowSlide(uint8_t index)
     uint8_t* cur_icon;
     uint16_t cur_xpos;
     uint8_t k;
-    
+
     cur_xpos=ICON_DOT_XPOS;
     if(index>=0 && index<5)
     {
@@ -801,18 +801,18 @@ void LCD_ShowSlide(uint8_t index)
              cur_icon=(uint8_t*)icon_sdot;
            }
            else
-          { 
+          {
              cur_icon=(uint8_t*)icon_dot;
            }
-        
-           LCD_ShowImage(cur_xpos, ICON_DOT_YPOS, 
+
+           LCD_ShowImage(cur_xpos, ICON_DOT_YPOS,
                          ICON_DOT_WIDTH, ICON_DOT_HEIGHT, cur_icon);
            cur_xpos+=ICON_DOT_GAP;
        }
     }
 }
 
-void LCD_ShowDot(void)   
+void LCD_ShowDot(void)
 {
       uint8_t* cur_icon;
       cur_icon=(uint8_t*)icon_dot;
