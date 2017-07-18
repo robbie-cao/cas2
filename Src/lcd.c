@@ -815,8 +815,8 @@ void LCD_ShowSlide(uint8_t index)
 void LCD_ShowDot(void)
 {
       uint8_t* cur_icon;
-      cur_icon=(uint8_t*)icon_dot;
-      LCD_ShowImage(DIGIT_DOT_XPOS, DIGIT_DOT_YPOS, ICON_DOT_WIDTH, ICON_DOT_HEIGHT, cur_icon);
+      cur_icon=(uint8_t*)icon_bigdot;
+      LCD_ShowImage(DIGIT_DOT_XPOS, DIGIT_DOT_YPOS, DIG_DOT_WIDTH, DIG_DOT_HEIGHT, cur_icon);
 }
 
 

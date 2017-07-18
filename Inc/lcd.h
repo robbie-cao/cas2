@@ -59,6 +59,12 @@ extern u32        BACK_COLOR;  // 背景颜色.默认为白色
 #define LEFT          0
 #define RIGHT         1
 
+enum clear_mode
+{
+    CLASSIC =0,
+    FASION  =1
+};
+
 enum slide_index
 {
     INDEX_0 =0,
@@ -80,13 +86,15 @@ enum slide_index
 #define ICON_DOT_GAP    16
 
 
-#define DIGIT_DOT_XPOS  288
+#define DIGIT_DOT_XPOS  280
 #define DIGIT_DOT_YPOS  230
 
 #define DIGIT_XPOS    48
-#define DIGIT_YPOS    84
+#define DIGIT_YPOS    92
 #define DOT_XPOS_ADJ  24
 
+#define DIG_DOT_WIDTH   20
+#define DIG_DOT_HEIGHT  20
 
 #define DIGIT_WIDTH       96
 #define DIGIT_HEIGHT     192
