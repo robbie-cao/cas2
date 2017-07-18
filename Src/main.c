@@ -231,13 +231,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
   printf("Start...\r\n");
 
-  /*##-2- Start the TIM Base generation in interrupt mode ####################*/
-  /* Start Channel1 */
-  if(HAL_TIM_Base_Start_IT(&htim3) != HAL_OK)
-  {
-    /* Starting Error */
-    Error_Handler();
-  }
 
   POINT_COLOR=WHITE;
   //          LCD_Switch_Off();
@@ -250,6 +243,13 @@ int main(void)
   PM25_StartMeasurement();
   HAL_Delay(100);
 
+  /*##-2- Start the TIM Base generation in interrupt mode ####################*/
+  /* Start Channel1 */
+  if(HAL_TIM_Base_Start_IT(&htim3) != HAL_OK)
+  {
+    /* Starting Error */
+    Error_Handler();
+  }
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
