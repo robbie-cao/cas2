@@ -236,8 +236,8 @@ int main(void)
   //          LCD_Switch_Off();
 
   LCD_ShowImage(LOGO_XPOS, LOGO_YPOS, LOGO_WIDTH, LOGO_HEIGHT, (uint8_t*)logo);
-  HAL_Delay(2000);
-  LCD_Clear(BLACK);
+  HAL_Delay(1000);
+  //LCD_Clear(BLACK);
 
   PM25_StopAutoSend();
   PM25_StartMeasurement();
