@@ -103,8 +103,8 @@ uint8_t start_rcv_timer;
 uint8_t rcv_tim_delay;
 uint8_t comm_rcv_flag;
 
-float g_humidity = 0.0, g_temperature = 0.0;
-uint16_t g_co2 = 800, g_voc = 120, g_pm25 = 150, g_pm10 = 50;
+float g_humidity = 70.0, g_temperature = 25.0;
+uint16_t g_co2 = 500, g_voc = 120, g_pm25 = 50, g_pm10 = 50;
 
 struct LCD_Screen
 {

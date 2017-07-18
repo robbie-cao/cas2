@@ -2,6 +2,8 @@
 #include "voc.h"
 #include "i2c.h"
 
+#define DEBUG   0
+
 uint16_t voc_old = 120;
 
 #define IAQ_CORE_I2C_ADDRESS    (0x5A << 1)
@@ -17,12 +19,14 @@ ErrorStatus Read_VocData(uint16_t* pDataCO2 ,uint16_t* pDataVOC)
 
   memset(buf, 0, sizeof(buf));
   res = I2C_Read(IAQ_CORE_I2C_ADDRESS, buf, sizeof(buf));
-//  printf("IAQ R - %d\r\n", res);
-//  printf("Data: ");
-//  for (int i = 0; i < sizeof(buf); i++) {
-//    printf("%02x ", buf[i]);
-//  }
-//  printf("\r\n");
+#if DEBUG
+  printf("IAQ R - %d\r\n", res);
+  printf("Data: ");
+  for (int i = 0; i < sizeof(buf); i++) {
+    printf("%02x ", buf[i]);
+  }
+  printf("\r\n");
+#endif
 
   if (res != HAL_OK) {
     return ERROR;

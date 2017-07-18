@@ -2,6 +2,10 @@
 #include "i2c.h"
 #include "hih6130.h"
 
+#define DEBUG   0
+
+float g_hum_old = 70.0, g_temp_old = 25.0;
+
 void HIH6130_Init(void)
 {
 }
@@ -19,19 +23,23 @@ ErrorStatus HIH6130_ReadHumiTemp(uint16_t* pDataH, uint16_t* pDataT)
 
   memset(buf, 0, sizeof(buf));
   res = I2C_Write(HIH6130_I2C_ADDRESS, NULL, 0);
-//  printf("I2C W - %d\r\n", res);
+#if DEBUG
+  printf("I2C W - %d\r\n", res);
+#endif
   if (res != HAL_OK) {
     return ERROR;
   }
   /* Wait some time before read operation */
   HAL_Delay(60);
   res = I2C_Read(HIH6130_I2C_ADDRESS, buf, sizeof(buf));
-//  printf("H/T R - %d\r\n", res);
-//  printf("Data: ");
-//  for (int i = 0; i < sizeof(buf); i++) {
-//    printf("%02x ", buf[i]);
-//  }
-//  printf("\r\n");
+#if DEBUG
+  printf("H/T R - %d\r\n", res);
+  printf("Data: ");
+  for (int i = 0; i < sizeof(buf); i++) {
+    printf("%02x ", buf[i]);
+  }
+  printf("\r\n");
+#endif
   if (res != HAL_OK) {
     return ERROR;
   }
@@ -60,9 +68,11 @@ void Get_HumiTemp(float* rh, float* tc)
   if (HIH6130_ReadHumiTemp(&humi, &temp)) {
     *rh = (float)humi * 6.10e-3;
     *tc = (float)temp * 1.007e-2 - 40.0;
+    g_hum_old = *rh;
+    g_temp_old = *tc;
   } else {
     /* Render certain error values to display */
-    *rh = 25.0;
-    *tc = 70.0;
+    *rh = g_hum_old;
+    *tc = g_temp_old;
   }
 }
