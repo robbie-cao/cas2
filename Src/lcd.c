@@ -555,7 +555,7 @@ void LCD_ShowDigit(u16 x,u16 y,u8 num,u16 size,u8 mode)
 
 	for(t=0;t<csize;t++)
 	{
-	       temp=digit[num][t];
+	       temp=honeydigit[num][t];
 
 		for(t1=0;t1<8;t1++)
 		{
