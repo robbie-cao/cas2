@@ -660,30 +660,14 @@ void DisplayTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-#if 0
-    if(comm_rcv_flag)
-    {
-      Comm_Process();
-      comm_rcv_flag = 0;
-      Comm_Response();
-    }
-    if (sensor_current == sensor_next) {
-      continue ;
-    }
-
-    // Read sensor data
-    Get_VocData(&g_co2, &g_voc);
-    Get_HumiTemp(&g_humidity, &g_temperature);
-//    S8_Read(&g_co2);
-//    PM25_Read(&g_pm25, &g_pm10);
-#endif
-
     if (sensor_current == sensor_next) {
       vTaskDelay(10);
       continue ;
     }
-    LCD_Clear(BLACK);
-    //LCD_MaskImage(0,0,480,320, BLACK);
+    //LCD_Scroll_On(LEFT);
+    //LCD_Clear(BLACK);
+
+    LCD_MaskImage(0,0,480,320, BLACK);
     POINT_COLOR=WHITE;
 
     memset(buf, 0, sizeof(buf));
