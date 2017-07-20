@@ -2,11 +2,13 @@
 #include "voc.h"
 #include "i2c.h"
 
-#define DEBUG   0
+#define DEBUG   1
 
-uint16_t voc_old = 120;
+uint16_t voc_old = 122;
 
 #define IAQ_CORE_I2C_ADDRESS    (0x5A << 1)
+#define IAQ_CORE_I2C_ADDRESS_W    (0xB4)
+#define IAQ_CORE_I2C_ADDRESS_R    (0xB5)
 
 void Voc_Init(void)
 {
@@ -37,9 +39,9 @@ ErrorStatus Read_VocData(uint16_t* pDataCO2 ,uint16_t* pDataVOC)
    *   0x80 - ERROR;
    *   0x00 - OK
    */
-  if (buf[2]) {
-    return ERROR;
-  }
+//  if (buf[2]) {
+//    return ERROR;
+//  }
   /* Store data for processing */
   *pDataCO2 = (((uint16_t)buf[0]) << 8) | buf[1];
   *pDataVOC = (((uint16_t)buf[7]) << 8) | buf[8];
@@ -57,7 +59,7 @@ void Get_VocData(uint16_t* pDataCO2 ,uint16_t* pDataVOC)
 {
   uint16_t co2, voc;
 
-  if (Read_VocData(&co2, &voc)) {
+  if (Read_VocData(&co2, &voc) == SUCCESS) {
     *pDataCO2 = (uint16_t)co2;
     *pDataVOC = (uint16_t)voc;
     voc_old = voc;
