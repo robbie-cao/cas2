@@ -66,6 +66,9 @@
 #include "comm.h"
 
 #include "led.h"
+#define KEY_RIGHT        HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_11)
+#define KEY_LEFT         HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_13)
+#define KEY_CENTER       HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_12)
 
 
 
@@ -141,6 +144,8 @@ void StartDefaultTask(void const * argument);
 void SensorTask(void const * argument);
 void CommTask(void const * argument);
 void DisplayTask(void const * argument);
+void Init_Keypad(void);
+void Keypad_handler(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -185,6 +190,68 @@ void IAQ_Init(void)
 
 }
 
+void Init_Keypad(void)
+{
+    GPIO_InitTypeDef GPIO_Initstruct;
+
+    __HAL_RCC_GPIOF_CLK_ENABLE();
+
+    GPIO_Initstruct.Pin=GPIO_PIN_11|GPIO_PIN_13|GPIO_PIN_12;
+    GPIO_Initstruct.Mode=GPIO_MODE_INPUT;
+    GPIO_Initstruct.Pull=GPIO_PULLUP;
+    GPIO_Initstruct.Speed=GPIO_SPEED_HIGH;
+    HAL_GPIO_Init(GPIOD,&GPIO_Initstruct);
+
+}
+
+void Keypad_handler(void)
+{
+    volatile uint8_t key_up=1;
+    if((KEY_RIGHT==0)&& key_up)
+   {
+        osDelay(60);
+        if(KEY_RIGHT==0)
+        {
+           key_up =0;
+           if(sensor_next>=0 && sensor_next<4)
+           {
+               sensor_next+=1;
+           }
+           else
+           {
+               sensor_next=0;
+           }
+        }
+    }
+    else if((KEY_LEFT==0)&& key_up)
+    {
+        osDelay(60);
+        if(KEY_LEFT==0)
+        {
+           key_up=0;
+           if(sensor_next>0 && sensor_next<=4)
+           {
+               sensor_next-=1;
+           }
+           else
+           {
+               sensor_next=4;
+           }
+        }
+    }
+    else if((KEY_CENTER==0)&& key_up)
+    {
+        osDelay(60);
+        if(KEY_CENTER==0)
+        {
+           key_up =0;
+        }
+    }
+    else if((KEY_RIGHT==1)&&(KEY_LEFT==1)&&(KEY_CENTER==1))
+    {
+       key_up =1;
+    }
+}
 /* USER CODE END 0 */
 
 int main(void)
@@ -238,7 +305,7 @@ int main(void)
 
   LCD_ShowImage(LOGO_XPOS, LOGO_YPOS, LOGO_WIDTH, LOGO_HEIGHT, (uint8_t*)logo);
   HAL_Delay(1000);
-  //LCD_Clear(BLACK);
+  LCD_Clear(BLACK);
 
   PM25_StopAutoSend();
   PM25_StopAutoSend();
@@ -249,11 +316,13 @@ int main(void)
 
   /*##-2- Start the TIM Base generation in interrupt mode ####################*/
   /* Start Channel1 */
+#if 0
   if(HAL_TIM_Base_Start_IT(&htim3) != HAL_OK)
   {
     /* Starting Error */
     Error_Handler();
   }
+#endif
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -279,7 +348,7 @@ int main(void)
   osThreadDef(sensorTask, SensorTask, osPriorityNormal, 0, 256);
   sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
 
-  osThreadDef(commTask, CommTask, osPriorityAboveNormal, 0, 128);
+  osThreadDef(commTask, CommTask, osPriorityNormal, 0, 128);
   commTaskHandle = osThreadCreate(osThread(commTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -681,15 +750,15 @@ void DisplayTask(void const * argument)
       continue ;
     }
     //LCD_Scroll_On(LEFT);
-    //LCD_Clear(BLACK);
+    LCD_Clear(BLACK);
 
-    LCD_MaskImage(0,0,480,320, BLACK);
+ //   LCD_MaskImage(0,0,480,320, BLACK);
     POINT_COLOR=WHITE;
 
     memset(buf, 0, sizeof(buf));
     LCD_ShowImage(ICON_SENSOR_XPOS, ICON_SENSOR_YPOS,
                   ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[sensor_next].cur_icon);
-    // LCD_ShowSlide(screen[sensor_next].cur_index);
+     LCD_ShowSlide(screen[sensor_next].cur_index);
 
     switch (sensor_next) {
     case 0:
@@ -768,9 +837,11 @@ void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
+  Init_Keypad();
   for(;;)
   {
-    osDelay(100);
+    Keypad_handler();
+    osDelay(200);
   }
   /* USER CODE END 5 */
 }
