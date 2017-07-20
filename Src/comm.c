@@ -352,7 +352,7 @@ uint8_t Get_PM25_P(uint8_t* buf)
   buf[1] = 'P';
   buf[2] = '"';
   buf[3] = ':';
-  if( -1 == g_co2 )
+  if( -1 == g_pm25 )
   {
     buf[4] = '-';
     buf[5] = '1';
