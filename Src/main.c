@@ -618,6 +618,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE END 4 */
 void CommTask(void const * argument)
 {
+  HAL_UART_Receive_IT(&WIFI_COMM_UART, &one_byte, 1);
   /* Infinite loop */
   for(;;)
   {
