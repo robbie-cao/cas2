@@ -104,7 +104,7 @@ uint8_t rcv_tim_delay;
 uint8_t comm_rcv_flag;
 
 float g_humidity = 70.0, g_temperature = 25.0;
-uint16_t g_co2 = 500, g_voc = 120, g_pm25 = 50, g_pm10 = 50;
+uint16_t g_co2 = 500, g_voc = 123, g_pm25 = 50, g_pm10 = 50;
 
 struct LCD_Screen
 {
@@ -223,7 +223,7 @@ int main(void)
   Comm_Init();
 
   LCD_Init();
-  LCD_BKL_SET;
+  LCD_BKL_RESET;
 
   LCD_Clear(BLACK);
   POINT_COLOR=WHITE;
@@ -641,7 +641,7 @@ void SensorTask(void const * argument)
     Get_VocData(&temp, &g_voc);
     Get_HumiTemp(&g_humidity, &g_temperature);
     S8_Read(&g_co2);
-//    PM25_Read(&g_pm25, &g_pm10);
+    PM25_Read(&g_pm25, &g_pm10);
     printf("T: %.1f, H: %.1f, V: %d\r\n", g_temperature, g_humidity, g_voc);
     printf("CO2: %d, PM25: %d\r\n", g_co2, g_pm25);
     vTaskDelay(2000);
@@ -723,7 +723,7 @@ void DisplayTask(void const * argument)
       }
       else if(myval>=0 && myval<10)
       {
-        bit_width=2;
+        bit_width=1;
       }else if(myval>=10 && myval<100)
       {
         bit_width=2;
@@ -731,6 +731,10 @@ void DisplayTask(void const * argument)
       else if(myval>=100 && myval<1000)
       {
         bit_width=3;
+      }
+      else if(myval>=1000 && myval<10000)
+      {
+        bit_width=4;
       }
       LCD_ShowDigtStr(buf, 0, bit_width);
       break;

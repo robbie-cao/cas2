@@ -584,6 +584,8 @@ void LCD_ShowDigtStr(u8 *p, uint8_t dot_flag, uint8_t bit_width)
 
     switch(bit_width)
     {
+       case 1:  cur_xpos=2*DIGIT_XPOS+ DIGIT_WIDTH;
+                 break;
        case 2:  cur_xpos=DIGIT_XPOS+ DIGIT_WIDTH;
                  break;
        case 3:  cur_xpos=DIGIT_WIDTH;
