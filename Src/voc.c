@@ -4,7 +4,7 @@
 
 #define DEBUG   1
 
-uint16_t voc_old = 122;
+extern uint16_t g_voc_old;
 
 #define IAQ_CORE_I2C_ADDRESS    (0x5A << 1)
 #define IAQ_CORE_I2C_ADDRESS_W    (0xB4)
@@ -39,9 +39,9 @@ ErrorStatus Read_VocData(uint16_t* pDataCO2 ,uint16_t* pDataVOC)
    *   0x80 - ERROR;
    *   0x00 - OK
    */
-//  if (buf[2]) {
-//    return ERROR;
-//  }
+  if (buf[2] == 0x01 || buf[2] == 0x80) {
+    return ERROR;
+  }
   /* Store data for processing */
   *pDataCO2 = (((uint16_t)buf[0]) << 8) | buf[1];
   *pDataVOC = (((uint16_t)buf[7]) << 8) | buf[8];
@@ -62,10 +62,10 @@ void Get_VocData(uint16_t* pDataCO2 ,uint16_t* pDataVOC)
   if (Read_VocData(&co2, &voc) == SUCCESS) {
     *pDataCO2 = (uint16_t)co2;
     *pDataVOC = (uint16_t)voc;
-    voc_old = voc;
+    g_voc_old = voc;
   } else {
     /* Render certain error values to display */
     *pDataCO2 = 0;
-    *pDataVOC = voc_old;
+    *pDataVOC = g_voc_old;
   }
 }
