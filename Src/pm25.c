@@ -2,7 +2,7 @@
 #include "pm25.h"
 #include "main.h"
 
-#define DEBUG   0
+#define DEBUG   1
 
 #define TIMEOUT         500
 
@@ -97,26 +97,34 @@ uint8_t PM25_StopMeasurement(void)
 
 uint8_t PM25_Read(uint16_t *pm25, uint16_t *pm10)
 {
+#define RECV_SIZE       10
   uint8_t cmd[] = {0x68, 0x01, 0x04, 0x93};
-  uint8_t rcv[8];
+  uint8_t rcv[RECV_SIZE];
+  int i;
 
   memset(rcv, 0, sizeof(rcv));
   HAL_UART_Transmit(&PM25_UART, cmd, 4, TIMEOUT);
-  HAL_UART_Receive(&PM25_UART, rcv, 8, TIMEOUT);
+  HAL_UART_Receive(&PM25_UART, rcv, 10, TIMEOUT);
 #if DEBUG
-  for (int i = 0; i < 8; i++) {
+  for (i = 0; i < RECV_SIZE; i++) {
     printf("0x%02x ", rcv[i]);
   }
   printf("\r\n");
 #endif
-  if (!(rcv[0] == 0x40 && rcv[1] == 0x05 && rcv[2] == 0x04)) {
+
+  for (i = 0; i < RECV_SIZE - 8; i++) {
+    if (rcv[i] == 0x40 && rcv[i + 1] == 0x05 && rcv[i + 2] == 0x04) {
+      break;
+    }
+  }
+  if (!(rcv[i] == 0x40 && rcv[i + 1] == 0x05 && rcv[i + 2] == 0x04)) {
     *pm25 = g_pm25_old;
     *pm10 = g_pm10_old;
     return ERROR;
   }
 
-  *pm25 = (rcv[3] << 8) | rcv[4];
-  *pm10 = (rcv[5] << 8) | rcv[6];
+  *pm25 = (rcv[i + 3] << 8) | rcv[i + 4];
+  *pm10 = (rcv[i + 5] << 8) | rcv[i + 6];
 
   g_pm25_old = *pm25;
   g_pm10_old = *pm10;
