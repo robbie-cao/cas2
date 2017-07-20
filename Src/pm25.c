@@ -100,6 +100,7 @@ uint8_t PM25_Read(uint16_t *pm25, uint16_t *pm10)
 #define RECV_SIZE       10
   uint8_t cmd[] = {0x68, 0x01, 0x04, 0x93};
   uint8_t rcv[RECV_SIZE];
+  uint8_t cs = 0;
   int i;
 
   memset(rcv, 0, sizeof(rcv));
@@ -118,6 +119,14 @@ uint8_t PM25_Read(uint16_t *pm25, uint16_t *pm10)
     }
   }
   if (!(rcv[i] == 0x40 && rcv[i + 1] == 0x05 && rcv[i + 2] == 0x04)) {
+    *pm25 = g_pm25_old;
+    *pm10 = g_pm10_old;
+    return ERROR;
+  }
+
+  // checksum
+  cs = (65536 - rcv[i] - rcv[i + 1] - rcv[i + 2] - rcv[i + 3] - rcv[i + 4] - rcv[i + 5] - rcv[i + 6]) % 256;
+  if (cs != rcv[i+7]) {
     *pm25 = g_pm25_old;
     *pm10 = g_pm10_old;
     return ERROR;
