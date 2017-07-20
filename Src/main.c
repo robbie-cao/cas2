@@ -240,6 +240,9 @@ int main(void)
   //LCD_Clear(BLACK);
 
   PM25_StopAutoSend();
+  PM25_StopAutoSend();
+  PM25_StopAutoSend();
+  HAL_Delay(10);
   PM25_StartMeasurement();
   HAL_Delay(100);
 
