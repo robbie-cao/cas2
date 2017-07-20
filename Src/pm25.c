@@ -9,7 +9,7 @@
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
-uint16_t g_pm25_old = 50, g_pm10_old = 50;
+extern uint16_t g_pm25_old, g_pm10_old;
 
 uint8_t PM25_EnableAutoSend(void)
 {

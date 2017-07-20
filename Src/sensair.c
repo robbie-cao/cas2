@@ -9,7 +9,7 @@
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
-uint16_t g_co2_old = 500;
+extern uint16_t g_co2_old;
 
 uint8_t S8_Read(uint16_t *c)
 {

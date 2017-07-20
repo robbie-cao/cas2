@@ -110,6 +110,11 @@ uint8_t comm_rcv_flag;
 float g_humidity = 70.0, g_temperature = 25.0;
 uint16_t g_co2 = 500, g_voc = 123, g_pm25 = 50, g_pm10 = 50;
 
+float g_hum_old = 70.0, g_temp_old = 25.0;
+uint16_t g_co2_old = 500;
+uint16_t g_pm25_old = 50, g_pm10_old = 50;
+uint16_t g_voc_old = 122;
+
 struct LCD_Screen
 {
    uint8_t* cur_icon;
@@ -734,6 +739,34 @@ void SensorTask(void const * argument)
   }
 }
 
+uint8_t SensorDataChange(void)
+{
+  uint8_t changed = 0;
+
+  switch (sensor_current) {
+  case 0:
+    changed = (g_temperature != g_temp_old);
+    break;
+  case 1:
+    changed = (g_humidity != g_hum_old);
+    break;
+  case 2:
+    changed = (g_co2 != g_co2_old);
+    break;
+  case 3:
+    changed = (g_voc != g_voc_old);
+    break;
+  case 4:
+    changed = (g_pm25 != g_pm25_old);
+    break;
+  default:
+    break;
+
+  }
+
+  return changed;
+}
+
 void DisplayTask(void const * argument)
 {
   float curval;
@@ -828,7 +861,7 @@ void DisplayTask(void const * argument)
     default:
       break;
     }
-    
+
     sensor_current = sensor_next;
     vTaskDelay(200);
 //    osDelay(1);

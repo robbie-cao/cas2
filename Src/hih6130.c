@@ -4,7 +4,7 @@
 
 #define DEBUG   0
 
-float g_hum_old = 70.0, g_temp_old = 25.0;
+extern float g_hum_old, g_temp_old;
 
 void HIH6130_Init(void)
 {
