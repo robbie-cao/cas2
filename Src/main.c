@@ -192,65 +192,65 @@ void IAQ_Init(void)
 
 void Init_Keypad(void)
 {
-    GPIO_InitTypeDef GPIO_Initstruct;
+  GPIO_InitTypeDef GPIO_Initstruct;
 
-    __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
-    GPIO_Initstruct.Pin=GPIO_PIN_11|GPIO_PIN_13|GPIO_PIN_12;
-    GPIO_Initstruct.Mode=GPIO_MODE_INPUT;
-    GPIO_Initstruct.Pull=GPIO_PULLUP;
-    GPIO_Initstruct.Speed=GPIO_SPEED_HIGH;
-    HAL_GPIO_Init(GPIOD,&GPIO_Initstruct);
+  GPIO_Initstruct.Pin=GPIO_PIN_11|GPIO_PIN_13|GPIO_PIN_12;
+  GPIO_Initstruct.Mode=GPIO_MODE_INPUT;
+  GPIO_Initstruct.Pull=GPIO_PULLUP;
+  GPIO_Initstruct.Speed=GPIO_SPEED_HIGH;
+  HAL_GPIO_Init(GPIOD,&GPIO_Initstruct);
 
 }
 
 void Keypad_handler(void)
 {
-    volatile uint8_t key_up=1;
-    if((KEY_RIGHT==0)&& key_up)
-   {
-        osDelay(60);
-        if(KEY_RIGHT==0)
-        {
-           key_up =0;
-           if(sensor_next>=0 && sensor_next<4)
-           {
-               sensor_next+=1;
-           }
-           else
-           {
-               sensor_next=0;
-           }
-        }
-    }
-    else if((KEY_LEFT==0)&& key_up)
+  volatile uint8_t key_up=1;
+  if((KEY_RIGHT==0)&& key_up)
+  {
+    osDelay(60);
+    if(KEY_RIGHT==0)
     {
-        osDelay(60);
-        if(KEY_LEFT==0)
-        {
-           key_up=0;
-           if(sensor_next>0 && sensor_next<=4)
-           {
-               sensor_next-=1;
-           }
-           else
-           {
-               sensor_next=4;
-           }
-        }
+      key_up =0;
+      if(sensor_next>=0 && sensor_next<4)
+      {
+        sensor_next+=1;
+      }
+      else
+      {
+        sensor_next=0;
+      }
     }
-    else if((KEY_CENTER==0)&& key_up)
+  }
+  else if((KEY_LEFT==0)&& key_up)
+  {
+    osDelay(60);
+    if(KEY_LEFT==0)
     {
-        osDelay(60);
-        if(KEY_CENTER==0)
-        {
-           key_up =0;
-        }
+      key_up=0;
+      if(sensor_next>0 && sensor_next<=4)
+      {
+        sensor_next-=1;
+      }
+      else
+      {
+        sensor_next=4;
+      }
     }
-    else if((KEY_RIGHT==1)&&(KEY_LEFT==1)&&(KEY_CENTER==1))
+  }
+  else if((KEY_CENTER==0)&& key_up)
+  {
+    osDelay(60);
+    if(KEY_CENTER==0)
     {
-       key_up =1;
+      key_up =0;
     }
+  }
+  else if((KEY_RIGHT==1)&&(KEY_LEFT==1)&&(KEY_CENTER==1))
+  {
+    key_up =1;
+  }
 }
 /* USER CODE END 0 */
 
