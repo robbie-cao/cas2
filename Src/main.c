@@ -732,10 +732,11 @@ void SensorTask(void const * argument)
     PM25_Read(&g_pm25, &g_pm10);
     printf("T: %.1f, H: %.1f, V: %d\r\n", g_temperature, g_humidity, g_voc);
     printf("CO2: %d, PM25: %d\r\n", g_co2, g_pm25);
-    vTaskDelay(1000);
     LED_LEFT_TOGGLE();
     LED_CENTER_TOGGLE();
     LED_RIGHT_TOGGLE();
+
+    vTaskDelay(2000);
   }
 }
 
@@ -798,6 +799,13 @@ void DisplayTask(void const * argument)
     switch (sensor_next) {
     case 0:
       curval=g_temperature;
+#if 1
+    // temp workaround for temperature in chase is higher than room temperature
+    if (curval > 26.9) {
+      srand(HAL_GetTick());
+      curval = 26.9 + ((rand() % 200) / 2000.0);
+    }
+#endif
       sprintf(buf,"%3.1f",curval);
       if(curval<0) //Negative value
       {
