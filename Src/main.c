@@ -289,6 +289,7 @@ int main(void)
   MX_TIM3_Init();
   IAQ_Init();
   Comm_Init();
+  Init_Keypad();
 
   LCD_Init();
   LCD_BKL_RESET;
@@ -706,7 +707,7 @@ void CommTask(void const * argument)
       comm_rcv_flag = 0;
       Comm_Response();
     } else {
-      vTaskDelay(1);
+      vTaskDelay(10);
     }
   }
 }
@@ -726,7 +727,7 @@ void SensorTask(void const * argument)
     PM25_Read(&g_pm25, &g_pm10);
     printf("T: %.1f, H: %.1f, V: %d\r\n", g_temperature, g_humidity, g_voc);
     printf("CO2: %d, PM25: %d\r\n", g_co2, g_pm25);
-    vTaskDelay(2000);
+    vTaskDelay(1000);
     LED_LEFT_TOGGLE();
     LED_CENTER_TOGGLE();
     LED_RIGHT_TOGGLE();
@@ -745,6 +746,7 @@ void DisplayTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
+    Keypad_handler();
     if (sensor_current == sensor_next) {
       vTaskDelay(10);
       continue ;
@@ -826,7 +828,9 @@ void DisplayTask(void const * argument)
     default:
       break;
     }
+    
     sensor_current = sensor_next;
+    vTaskDelay(200);
 //    osDelay(1);
   }
   /* USER CODE END 5 */
@@ -837,10 +841,10 @@ void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-  Init_Keypad();
+//  Init_Keypad();
   for(;;)
   {
-    Keypad_handler();
+//    Keypad_handler();
     osDelay(200);
   }
   /* USER CODE END 5 */
