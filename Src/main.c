@@ -65,6 +65,7 @@
 
 #include "comm.h"
 
+#include "led.h"
 
 
 
@@ -611,6 +612,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
 
   HAL_GPIO_Init(LCD_BKL_PORT, &GPIO_InitStruct);
+
+  /* Configure the LED pin */
+  GPIO_InitStruct.Pin = LED_PIN_LEFT | LED_PIN_CENTER | LED_PIN_RIGHT;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+
+  HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
 }
 
 /* USER CODE BEGIN 4 */
@@ -649,6 +658,9 @@ void SensorTask(void const * argument)
     printf("T: %.1f, H: %.1f, V: %d\r\n", g_temperature, g_humidity, g_voc);
     printf("CO2: %d, PM25: %d\r\n", g_co2, g_pm25);
     vTaskDelay(2000);
+    LED_LEFT_TOGGLE();
+    LED_CENTER_TOGGLE();
+    LED_RIGHT_TOGGLE();
   }
 }
 
