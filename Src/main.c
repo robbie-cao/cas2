@@ -808,6 +808,8 @@ void DisplayByIndex(uint8_t slide)
 
   POINT_COLOR = WHITE;
   if (slide) {
+    // Clear whole screen and redraw icon and bottom slides
+
     //LCD_Scroll_On(LEFT);
     LCD_Clear(BLACK);
 
@@ -818,6 +820,7 @@ void DisplayByIndex(uint8_t slide)
                   ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[sensor_next].cur_icon);
     LCD_ShowSlide(screen[sensor_next].cur_index);
   } else {
+    // Only redraw data, not redraw icon and bottom slides
     LCD_Fill(DIGIT_XPOS, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
   }
 
@@ -897,12 +900,6 @@ void DisplayByIndex(uint8_t slide)
 
 void DisplayTask(void const * argument)
 {
-  float curval;
-  uint16_t myval;
-  uint8_t bit_width;
-  char buf[4]={0};
-  uint16_t temp;
-
 
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
@@ -911,16 +908,18 @@ void DisplayTask(void const * argument)
     Keypad_handler();
 
     if (sensor_current == sensor_next) {
+      // Stay at one sensor and update data if changed
       if (SensorDataChange()) {
         DisplayByIndex(0);
       }
-      vTaskDelay(500);
+      vTaskDelay(50);
       continue ;
     }
 
+    // Switch sensor and update whole screen
     DisplayByIndex(1);
     sensor_current = sensor_next;
-    vTaskDelay(1000);
+    vTaskDelay(50);
 //    osDelay(1);
   }
   /* USER CODE END 5 */
