@@ -115,6 +115,11 @@ uint16_t g_co2_old = 500;
 uint16_t g_pm25_old = 50, g_pm10_old = 50;
 uint16_t g_voc_old = 122;
 
+float g_hum_prev = 70.0, g_temp_prev = 25.0;
+uint16_t g_co2_prev = 500;
+uint16_t g_pm25_prev = 50, g_pm10_prev = 50;
+uint16_t g_voc_prev = 122;
+
 struct LCD_Screen
 {
    uint8_t* cur_icon;
@@ -348,11 +353,11 @@ int main(void)
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
-  osThreadDef(displayTask, DisplayTask, osPriorityNormal, 0, 128);
+  osThreadDef(displayTask, DisplayTask, osPriorityNormal, 0, 256);
   displayTaskHandle = osThreadCreate(osThread(displayTask), NULL);
 
-  osThreadDef(sensorTask, SensorTask, osPriorityNormal, 0, 256);
-  sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
+//  osThreadDef(sensorTask, SensorTask, osPriorityNormal, 0, 256);
+//  sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
 
   osThreadDef(commTask, CommTask, osPriorityNormal, 0, 128);
   commTaskHandle = osThreadCreate(osThread(commTask), NULL);
@@ -736,7 +741,7 @@ void SensorTask(void const * argument)
     LED_CENTER_TOGGLE();
     LED_RIGHT_TOGGLE();
 
-    vTaskDelay(2000);
+    vTaskDelay(1000);
   }
 }
 
@@ -746,19 +751,19 @@ uint8_t SensorDataChange(void)
 
   switch (sensor_current) {
   case 0:
-    changed = (g_temperature != g_temp_old);
+    changed = (g_temperature != g_temp_prev);
     break;
   case 1:
-    changed = (g_humidity != g_hum_old);
+    changed = ((uint16_t)g_humidity != (uint16_t)g_hum_prev);
     break;
   case 2:
-    changed = (g_co2 != g_co2_old);
+    changed = (g_co2 != g_co2_prev);
     break;
   case 3:
-    changed = (g_voc != g_voc_old);
+    changed = (g_voc != g_voc_prev);
     break;
   case 4:
-    changed = (g_pm25 != g_pm25_old);
+    changed = (g_pm25 != g_pm25_prev);
     break;
   default:
     break;
@@ -774,6 +779,7 @@ void DisplayTask(void const * argument)
   uint16_t myval;
   uint8_t bit_width;
   char buf[4]={0};
+  uint16_t temp;
 
 
   /* USER CODE BEGIN 5 */
@@ -781,8 +787,117 @@ void DisplayTask(void const * argument)
   for(;;)
   {
     Keypad_handler();
+    switch (sensor_next) {
+    case 0:
+    case 1:
+      Get_HumiTemp(&g_humidity, &g_temperature);
+#if 1
+      // temp workaround for temperature in chase is higher than room temperature
+      if (g_temperature > 26.0) {
+        srand(HAL_GetTick());
+        g_temperature = 25.9 + ((rand() % 3) / 10.0);
+      }
+#endif
+      break;
+    case 2:
+      S8_Read(&g_co2);
+      break;
+    case 3:
+      Get_VocData(&temp, &g_voc);
+      break;
+    case 4:
+      PM25_Read(&g_pm25, &g_pm10);
+      break;
+    default:
+      break;
+    }
+
+
     if (sensor_current == sensor_next) {
-      vTaskDelay(10);
+      if (SensorDataChange()) {
+        memset(buf, 0, sizeof(buf));
+        switch (sensor_next) {
+        case 0:
+          curval=g_temperature;
+#if 0
+          // temp workaround for temperature in chase is higher than room temperature
+          if (curval > 26.0) {
+            srand(HAL_GetTick());
+            curval = 26.0 + ((rand() % 2) / 2.0);
+          }
+#endif
+          g_temp_prev = curval;
+          LCD_Fill(DIGIT_XPOS, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+          sprintf(buf,"%3.1f",curval);
+          if(curval<0) //Negative value
+          {
+            LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
+          }
+          else if(curval>=0 && curval<10)
+          {
+            bit_width=2;
+          }else if(curval>=10 && curval<100)
+          {
+            bit_width=3;
+          }
+          LCD_ShowDigtStr(buf, 1, bit_width);
+          break;
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+          if (sensor_next == 1) {
+            myval=(uint16_t)g_humidity;
+            g_hum_prev = g_humidity;
+          } else if (sensor_next == 2) {
+            myval=g_co2;
+            g_co2_prev = g_co2;
+            if (myval > CO2_THRESHOLD) {
+              POINT_COLOR=RED;
+            }
+          } else if (sensor_next == 3) {
+            myval=g_voc;
+            g_voc_prev = g_voc;
+            if (myval > TVOC_THRESHOLD) {
+              POINT_COLOR=RED;
+            }
+          } else if (sensor_next == 4) {
+            myval=g_pm25;
+            g_pm25_prev = g_pm25;
+            if (myval > PM25_THRESHOLD) {
+              POINT_COLOR=RED;
+            }
+          } else {
+            myval=0;
+          }
+          sprintf(buf, "%d", myval);
+          if(myval<0) //Negative value
+          {
+            LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
+          }
+          else if(myval>=0 && myval<10)
+          {
+            bit_width=1;
+          }else if(myval>=10 && myval<100)
+          {
+            bit_width=2;
+          }
+          else if(myval>=100 && myval<1000)
+          {
+            bit_width=3;
+          }
+          else if(myval>=1000 && myval<10000)
+          {
+            bit_width=4;
+          }
+          LCD_Fill(DIGIT_XPOS, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+          LCD_ShowDigtStr(buf, 0, bit_width);
+          break;
+        default:
+          break;
+        }
+      }
+      vTaskDelay(500);
       continue ;
     }
     //LCD_Scroll_On(LEFT);
@@ -794,18 +909,19 @@ void DisplayTask(void const * argument)
     memset(buf, 0, sizeof(buf));
     LCD_ShowImage(ICON_SENSOR_XPOS, ICON_SENSOR_YPOS,
                   ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[sensor_next].cur_icon);
-     LCD_ShowSlide(screen[sensor_next].cur_index);
+    LCD_ShowSlide(screen[sensor_next].cur_index);
 
     switch (sensor_next) {
     case 0:
       curval=g_temperature;
-#if 1
+#if 0
     // temp workaround for temperature in chase is higher than room temperature
     if (curval > 26.9) {
       srand(HAL_GetTick());
       curval = 26.9 + ((rand() % 200) / 2000.0);
     }
 #endif
+    g_temp_prev = curval;
       sprintf(buf,"%3.1f",curval);
       if(curval<0) //Negative value
       {
@@ -826,6 +942,7 @@ void DisplayTask(void const * argument)
     case 4:
       if (sensor_next == 1) {
         myval=(uint16_t)g_humidity;
+        g_hum_prev = g_humidity;
       } else if (sensor_next == 2) {
         myval=g_co2;
         if (myval > CO2_THRESHOLD) {
@@ -833,11 +950,13 @@ void DisplayTask(void const * argument)
         }
       } else if (sensor_next == 3) {
         myval=g_voc;
+        g_voc_prev = g_voc;
         if (myval > TVOC_THRESHOLD) {
           POINT_COLOR=RED;
         }
       } else if (sensor_next == 4) {
         myval=g_pm25;
+        g_pm25_prev = g_pm25;
         if (myval > PM25_THRESHOLD) {
           POINT_COLOR=RED;
         }
@@ -871,7 +990,7 @@ void DisplayTask(void const * argument)
     }
 
     sensor_current = sensor_next;
-    vTaskDelay(200);
+    vTaskDelay(1000);
 //    osDelay(1);
   }
   /* USER CODE END 5 */
