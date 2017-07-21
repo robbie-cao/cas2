@@ -121,6 +121,8 @@ uint16_t g_co2_prev = 500;
 uint16_t g_pm25_prev = 50, g_pm10_prev = 50;
 uint16_t g_voc_prev = 122;
 
+xSemaphoreHandle xSensorDataMutex;
+
 struct LCD_Screen
 {
    uint8_t* cur_icon;
@@ -339,6 +341,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
+  xSensorDataMutex = xSemaphoreCreateMutex();
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
@@ -357,8 +360,8 @@ int main(void)
   osThreadDef(displayTask, DisplayTask, osPriorityNormal, 0, 256);
   displayTaskHandle = osThreadCreate(osThread(displayTask), NULL);
 
-//  osThreadDef(sensorTask, SensorTask, osPriorityNormal, 0, 256);
-//  sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
+  osThreadDef(sensorTask, SensorTask, osPriorityNormal, 0, 256);
+  sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
 
   osThreadDef(commTask, CommTask, osPriorityNormal, 0, 128);
   commTaskHandle = osThreadCreate(osThread(commTask), NULL);
@@ -725,24 +728,35 @@ void CommTask(void const * argument)
 
 void SensorTask(void const * argument)
 {
-  uint16_t temp;
+  float t, h;
+  uint16_t temp, co2, voc, pm25, pm10;
 
   /* Infinite loop */
   for(;;)
   {
     printf("s");
     // Read sensor data
-    Get_VocData(&temp, &g_voc);
-    Get_HumiTemp(&g_humidity, &g_temperature);
-    S8_Read(&g_co2);
-    PM25_Read(&g_pm25, &g_pm10);
+    Get_VocData(&temp, &voc);
+    Get_HumiTemp(&h, &t);
+    S8_Read(&co2);
+    PM25_Read(&pm25, &pm10);
+
+    xSemaphoreTake(xSensorDataMutex, portMAX_DELAY);
+    g_temperature = t;
+    g_humidity = h;
+    g_voc = voc;
+    g_co2 = co2;
+    g_pm25 = pm25;
+    xSemaphoreGive(xSensorDataMutex);
+
     printf("T: %.1f, H: %.1f, V: %d\r\n", g_temperature, g_humidity, g_voc);
     printf("CO2: %d, PM25: %d\r\n", g_co2, g_pm25);
+
     LED_LEFT_TOGGLE();
     LED_CENTER_TOGGLE();
     LED_RIGHT_TOGGLE();
 
-    vTaskDelay(1000);
+    vTaskDelay(2000);
   }
 }
 
@@ -780,7 +794,17 @@ void DisplayByIndex(uint8_t slide)
   uint16_t myval;
   uint8_t bit_width;
   char buf[4]={0};
-  uint16_t temp;
+
+  float t, h;
+  uint16_t temp, co2, voc, pm25, pm10;
+
+  xSemaphoreTake(xSensorDataMutex, portMAX_DELAY);
+  t = g_temperature;
+  h = g_humidity;
+  voc = g_voc;
+  co2 = g_co2;
+  pm25 = g_pm25;
+  xSemaphoreGive(xSensorDataMutex);
 
   POINT_COLOR = WHITE;
   if (slide) {
@@ -800,7 +824,7 @@ void DisplayByIndex(uint8_t slide)
   memset(buf, 0, sizeof(buf));
   switch (sensor_next) {
   case 0:
-    curval = g_temperature;
+    curval = t;
     g_temp_prev = curval;
     sprintf(buf,"%3.1f",curval);
     if(curval<0) //Negative value
@@ -821,23 +845,23 @@ void DisplayByIndex(uint8_t slide)
   case 3:
   case 4:
     if (sensor_next == 1) {
-      myval=(uint16_t)g_humidity;
-      g_hum_prev = g_humidity;
+      myval=(uint16_t)h;
+      g_hum_prev = myval;
     } else if (sensor_next == 2) {
-      myval=g_co2;
-      g_co2_prev = g_co2;
+      myval=co2;
+      g_co2_prev = myval;
       if (myval > CO2_THRESHOLD) {
         POINT_COLOR=RED;
       }
     } else if (sensor_next == 3) {
-      myval=g_voc;
-      g_voc_prev = g_voc;
+      myval=voc;
+      g_voc_prev = myval;
       if (myval > TVOC_THRESHOLD) {
         POINT_COLOR=RED;
       }
     } else if (sensor_next == 4) {
-      myval=g_pm25;
-      g_pm25_prev = g_pm25;
+      myval=pm25;
+      g_pm25_prev = myval;
       if (myval > PM25_THRESHOLD) {
         POINT_COLOR=RED;
       }
@@ -885,31 +909,6 @@ void DisplayTask(void const * argument)
   for(;;)
   {
     Keypad_handler();
-    switch (sensor_next) {
-    case 0:
-    case 1:
-      Get_HumiTemp(&g_humidity, &g_temperature);
-#if 1
-      // temp workaround for temperature in chase is higher than room temperature
-      if (g_temperature > 26.0) {
-        srand(HAL_GetTick());
-        g_temperature = 25.9 + ((rand() % 3) / 10.0);
-      }
-#endif
-      break;
-    case 2:
-      S8_Read(&g_co2);
-      break;
-    case 3:
-      Get_VocData(&temp, &g_voc);
-      break;
-    case 4:
-      PM25_Read(&g_pm25, &g_pm10);
-      break;
-    default:
-      break;
-    }
-
 
     if (sensor_current == sensor_next) {
       if (SensorDataChange()) {
