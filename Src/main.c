@@ -66,6 +66,7 @@
 #include "comm.h"
 
 #include "led.h"
+
 #define KEY_RIGHT        HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_11)
 #define KEY_LEFT         HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_13)
 #define KEY_CENTER       HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_12)
@@ -773,6 +774,103 @@ uint8_t SensorDataChange(void)
   return changed;
 }
 
+void DisplayByIndex(uint8_t slide)
+{
+  float curval;
+  uint16_t myval;
+  uint8_t bit_width;
+  char buf[4]={0};
+  uint16_t temp;
+
+  POINT_COLOR = WHITE;
+  if (slide) {
+    //LCD_Scroll_On(LEFT);
+    LCD_Clear(BLACK);
+
+    //LCD_MaskImage(0,0,480,320, BLACK);
+
+    memset(buf, 0, sizeof(buf));
+    LCD_ShowImage(ICON_SENSOR_XPOS, ICON_SENSOR_YPOS,
+                  ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[sensor_next].cur_icon);
+    LCD_ShowSlide(screen[sensor_next].cur_index);
+  } else {
+    LCD_Fill(DIGIT_XPOS, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+  }
+
+  memset(buf, 0, sizeof(buf));
+  switch (sensor_next) {
+  case 0:
+    curval = g_temperature;
+    g_temp_prev = curval;
+    sprintf(buf,"%3.1f",curval);
+    if(curval<0) //Negative value
+    {
+      LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
+    }
+    else if(curval>=0 && curval<10)
+    {
+      bit_width=2;
+    }else if(curval>=10 && curval<100)
+    {
+      bit_width=3;
+    }
+    LCD_ShowDigtStr(buf, 1, bit_width);
+    break;
+  case 1:
+  case 2:
+  case 3:
+  case 4:
+    if (sensor_next == 1) {
+      myval=(uint16_t)g_humidity;
+      g_hum_prev = g_humidity;
+    } else if (sensor_next == 2) {
+      myval=g_co2;
+      g_co2_prev = g_co2;
+      if (myval > CO2_THRESHOLD) {
+        POINT_COLOR=RED;
+      }
+    } else if (sensor_next == 3) {
+      myval=g_voc;
+      g_voc_prev = g_voc;
+      if (myval > TVOC_THRESHOLD) {
+        POINT_COLOR=RED;
+      }
+    } else if (sensor_next == 4) {
+      myval=g_pm25;
+      g_pm25_prev = g_pm25;
+      if (myval > PM25_THRESHOLD) {
+        POINT_COLOR=RED;
+      }
+    } else {
+      myval=0;
+    }
+    sprintf(buf, "%d", myval);
+    if(myval<0) //Negative value
+    {
+      LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
+    }
+    else if(myval>=0 && myval<10)
+    {
+      bit_width=1;
+    }else if(myval>=10 && myval<100)
+    {
+      bit_width=2;
+    }
+    else if(myval>=100 && myval<1000)
+    {
+      bit_width=3;
+    }
+    else if(myval>=1000 && myval<10000)
+    {
+      bit_width=4;
+    }
+    LCD_ShowDigtStr(buf, 0, bit_width);
+    break;
+  default:
+    break;
+  }
+}
+
 void DisplayTask(void const * argument)
 {
   float curval;
@@ -815,180 +913,13 @@ void DisplayTask(void const * argument)
 
     if (sensor_current == sensor_next) {
       if (SensorDataChange()) {
-        memset(buf, 0, sizeof(buf));
-        switch (sensor_next) {
-        case 0:
-          curval=g_temperature;
-#if 0
-          // temp workaround for temperature in chase is higher than room temperature
-          if (curval > 26.0) {
-            srand(HAL_GetTick());
-            curval = 26.0 + ((rand() % 2) / 2.0);
-          }
-#endif
-          g_temp_prev = curval;
-          LCD_Fill(DIGIT_XPOS, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
-          sprintf(buf,"%3.1f",curval);
-          if(curval<0) //Negative value
-          {
-            LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
-          }
-          else if(curval>=0 && curval<10)
-          {
-            bit_width=2;
-          }else if(curval>=10 && curval<100)
-          {
-            bit_width=3;
-          }
-          LCD_ShowDigtStr(buf, 1, bit_width);
-          break;
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-          if (sensor_next == 1) {
-            myval=(uint16_t)g_humidity;
-            g_hum_prev = g_humidity;
-          } else if (sensor_next == 2) {
-            myval=g_co2;
-            g_co2_prev = g_co2;
-            if (myval > CO2_THRESHOLD) {
-              POINT_COLOR=RED;
-            }
-          } else if (sensor_next == 3) {
-            myval=g_voc;
-            g_voc_prev = g_voc;
-            if (myval > TVOC_THRESHOLD) {
-              POINT_COLOR=RED;
-            }
-          } else if (sensor_next == 4) {
-            myval=g_pm25;
-            g_pm25_prev = g_pm25;
-            if (myval > PM25_THRESHOLD) {
-              POINT_COLOR=RED;
-            }
-          } else {
-            myval=0;
-          }
-          sprintf(buf, "%d", myval);
-          if(myval<0) //Negative value
-          {
-            LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
-          }
-          else if(myval>=0 && myval<10)
-          {
-            bit_width=1;
-          }else if(myval>=10 && myval<100)
-          {
-            bit_width=2;
-          }
-          else if(myval>=100 && myval<1000)
-          {
-            bit_width=3;
-          }
-          else if(myval>=1000 && myval<10000)
-          {
-            bit_width=4;
-          }
-          LCD_Fill(DIGIT_XPOS, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
-          LCD_ShowDigtStr(buf, 0, bit_width);
-          break;
-        default:
-          break;
-        }
+        DisplayByIndex(0);
       }
       vTaskDelay(500);
       continue ;
     }
-    //LCD_Scroll_On(LEFT);
-    LCD_Clear(BLACK);
 
- //   LCD_MaskImage(0,0,480,320, BLACK);
-    POINT_COLOR=WHITE;
-
-    memset(buf, 0, sizeof(buf));
-    LCD_ShowImage(ICON_SENSOR_XPOS, ICON_SENSOR_YPOS,
-                  ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[sensor_next].cur_icon);
-    LCD_ShowSlide(screen[sensor_next].cur_index);
-
-    switch (sensor_next) {
-    case 0:
-      curval=g_temperature;
-#if 0
-    // temp workaround for temperature in chase is higher than room temperature
-    if (curval > 26.9) {
-      srand(HAL_GetTick());
-      curval = 26.9 + ((rand() % 200) / 2000.0);
-    }
-#endif
-    g_temp_prev = curval;
-      sprintf(buf,"%3.1f",curval);
-      if(curval<0) //Negative value
-      {
-        LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
-      }
-      else if(curval>=0 && curval<10)
-      {
-        bit_width=2;
-      }else if(curval>=10 && curval<100)
-      {
-        bit_width=3;
-      }
-      LCD_ShowDigtStr(buf, 1, bit_width);
-      break;
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-      if (sensor_next == 1) {
-        myval=(uint16_t)g_humidity;
-        g_hum_prev = g_humidity;
-      } else if (sensor_next == 2) {
-        myval=g_co2;
-        if (myval > CO2_THRESHOLD) {
-          POINT_COLOR=RED;
-        }
-      } else if (sensor_next == 3) {
-        myval=g_voc;
-        g_voc_prev = g_voc;
-        if (myval > TVOC_THRESHOLD) {
-          POINT_COLOR=RED;
-        }
-      } else if (sensor_next == 4) {
-        myval=g_pm25;
-        g_pm25_prev = g_pm25;
-        if (myval > PM25_THRESHOLD) {
-          POINT_COLOR=RED;
-        }
-      } else {
-        myval=0;
-      }
-      sprintf(buf, "%d", myval);
-      if(myval<0) //Negative value
-      {
-        LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
-      }
-      else if(myval>=0 && myval<10)
-      {
-        bit_width=1;
-      }else if(myval>=10 && myval<100)
-      {
-        bit_width=2;
-      }
-      else if(myval>=100 && myval<1000)
-      {
-        bit_width=3;
-      }
-      else if(myval>=1000 && myval<10000)
-      {
-        bit_width=4;
-      }
-      LCD_ShowDigtStr(buf, 0, bit_width);
-      break;
-    default:
-      break;
-    }
-
+    DisplayByIndex(1);
     sensor_current = sensor_next;
     vTaskDelay(1000);
 //    osDelay(1);
@@ -1089,7 +1020,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
   *         add your own implementation.
   * @retval None
   */
- void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
 {
   /* Turn LED3 on: Transfer error in reception/transmission process */
   //BSP_LED_On(LED3);
