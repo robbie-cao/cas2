@@ -108,6 +108,8 @@ uint8_t start_rcv_timer;
 uint8_t rcv_tim_delay;
 uint8_t comm_rcv_flag;
 
+uint8_t auto_switch_flag = 0;
+
 float g_humidity = 70.0, g_temperature = 25.0;
 uint16_t g_co2 = 500, g_voc = 123, g_pm25 = 50, g_pm10 = 50;
 
@@ -258,6 +260,12 @@ void Keypad_handler(void)
     if(KEY_CENTER==0)
     {
       key_up =0;
+      auto_switch_flag = !auto_switch_flag;
+      if (auto_switch_flag) {
+        HAL_TIM_Base_Start_IT(&htim3);
+      } else {
+        HAL_TIM_Base_Stop_IT(&htim3);
+      }
     }
   }
   else if((KEY_RIGHT==1)&&(KEY_LEFT==1)&&(KEY_CENTER==1))
