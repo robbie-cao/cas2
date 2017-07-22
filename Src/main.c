@@ -71,11 +71,11 @@
 #define KEY_LEFT         HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_13)
 #define KEY_CENTER       HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_12)
 
-enum screen_update_mode
+typedef enum Screen_Update_Mode
 {
    FIXED_MODE = 0,
    SCROLL_MODE = 1
-};
+} Screen_Update_Mode_t;
 
 
 // Assign default value for all sensors for the first time use not to be empty
@@ -147,7 +147,16 @@ typedef struct LCD_Screen
   uint8_t cur_index;
 } LCD_Screen_t;
 
+typedef struct LCD_Display
+{
+  Screen_Update_Mode_t  mode;
+  uint8_t               index;
+  SensorData_t          data_to_display;
+  SensorData_t          data_on_screen;
+} LCD_Display_t;
+
 struct LCD_Screen screen[5];
+struct LCD_Display display;
 
 
 /* USER CODE BEGIN PV */
@@ -743,7 +752,6 @@ void SensorTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    printf("s");
     // Read sensor data
     Get_HumiTemp(&h, &t);
     S8_Read(&co2);
@@ -806,7 +814,7 @@ void DisplayByIndex(uint8_t mode)
   float curval;
   uint16_t myval;
   uint8_t bit_width;
-  char buf[4]={0};
+  char buf[4] = {0};
 
   float t, h;
   uint16_t temp, co2, voc, pm25, pm10;
@@ -844,17 +852,17 @@ void DisplayByIndex(uint8_t mode)
   case 0:
     curval = t;
     sensor_data_display.temperature = curval;
-    sprintf(buf,"%3.1f",curval);
-    if(curval<0) //Negative value
+    sprintf(buf,"%3.1f", curval);
+    if (curval <0 ) //Negative value
     {
       LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
     }
-    else if(curval>=0 && curval<10)
+    else if (curval >= 0 && curval < 10)
     {
-      bit_width=2;
-    }else if(curval>=10 && curval<100)
+      bit_width = 2;
+    } else if (curval >= 10 && curval < 100)
     {
-      bit_width=3;
+      bit_width = 3;
     }
     LCD_ShowDigtStr(buf, 1, bit_width);
     break;
@@ -863,48 +871,49 @@ void DisplayByIndex(uint8_t mode)
   case 3:
   case 4:
     if (sensor_next == 1) {
-      myval=(uint16_t)h;
+      myval = (uint16_t)h;
       sensor_data_display.humidity = myval;
     } else if (sensor_next == 2) {
       myval=co2;
       sensor_data_display.co2 = myval;
       if (myval > CO2_THRESHOLD) {
-        POINT_COLOR=RED;
+        POINT_COLOR = RED;
       }
     } else if (sensor_next == 3) {
-      myval=voc;
+      myval = voc;
       sensor_data_display.co2 = myval;
       if (myval > TVOC_THRESHOLD) {
-        POINT_COLOR=RED;
+        POINT_COLOR = RED;
       }
     } else if (sensor_next == 4) {
-      myval=pm25;
+      myval = pm25;
       sensor_data_display.pm25 = myval;
       if (myval > PM25_THRESHOLD) {
-        POINT_COLOR=RED;
+        POINT_COLOR = RED;
       }
     } else {
-      myval=0;
+      myval = 0;
     }
     sprintf(buf, "%d", myval);
-    if(myval<0) //Negative value
+    if (myval < 0) //Negative value
     {
       LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
     }
-    else if(myval>=0 && myval<10)
+    else if (myval >= 0 && myval < 10)
     {
-      bit_width=1;
-    }else if(myval>=10 && myval<100)
-    {
-      bit_width=2;
+      bit_width = 1;
     }
-    else if(myval>=100 && myval<1000)
+    else if (myval >= 10 && myval < 100)
     {
-      bit_width=3;
+      bit_width = 2;
     }
-    else if(myval>=1000 && myval<10000)
+    else if (myval >= 100 && myval < 1000)
     {
-      bit_width=4;
+      bit_width = 3;
+    }
+    else if (myval >= 1000 && myval < 10000)
+    {
+      bit_width = 4;
     }
     LCD_ShowDigtStr(buf, 0, bit_width);
     break;
