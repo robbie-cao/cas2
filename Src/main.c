@@ -115,8 +115,6 @@ osThreadId commTaskHandle;
 osThreadId displayTaskHandle;
 
 uint32_t tim3_count = 0;
-uint8_t sensor_current = 0xFF;
-uint8_t sensor_next = 0;
 
 uint8_t one_byte = 'X';
 uint8_t recv_comm_buf[COMM_RECV_BUF_MAX];
@@ -150,7 +148,8 @@ typedef struct LCD_Screen
 typedef struct LCD_Display
 {
   Screen_Update_Mode_t  mode;
-  uint8_t               index;
+  uint8_t               index_curr;
+  uint8_t               index_next;
   SensorData_t          data_to_display;
   SensorData_t          data_on_screen;
 } LCD_Display_t;
@@ -222,6 +221,12 @@ void Screen_Init(void)
   screen[4].cur_icon = (uint8_t*)icon_pm25;
   screen[4].sensor.pm25_val = sensor_data_latest.pm25;
   screen[4].cur_index = INDEX_4;
+
+  display.mode = FIXED_MODE;
+  display.index_curr = 0xFF;
+  display.index_next = 0;
+  memcpy(&display.data_to_display, &sensor_data_latest, sizeof(SensorData_t));
+  memset(&display.data_on_screen, 0, sizeof(SensorData_t));
 }
 
 
@@ -233,13 +238,13 @@ void Keypad_handler(void)
   {
     if (xSemaphoreTake(xScreenCtrlMutex, (TickType_t)10) == pdTRUE )
     {
-      if (sensor_next >= 0 && sensor_next < 4)
+      if (display.index_next >= 0 && display.index_next < 4)
       {
-        sensor_next += 1;
+        display.index_next += 1;
       }
       else
       {
-        sensor_next = 0;
+        display.index_next = 0;
       }
       xSemaphoreGive( xScreenCtrlMutex );
     }
@@ -248,13 +253,13 @@ void Keypad_handler(void)
   {
     if (xSemaphoreTake(xScreenCtrlMutex, (TickType_t)10) == pdTRUE )
     {
-      if (sensor_next > 0 && sensor_next <= 4)
+      if (display.index_next > 0 && display.index_next <= 4)
       {
-        sensor_next -= 1;
+        display.index_next -= 1;
       }
       else
       {
-        sensor_next = 4;
+        display.index_next = 4;
       }
       xSemaphoreGive( xScreenCtrlMutex );
     }
@@ -785,7 +790,7 @@ uint8_t SensorDataChange(void)
 {
   uint8_t changed = 0;
 
-  switch (sensor_current) {
+  switch (display.index_curr) {
   case 0:
     changed = (sensor_data_latest.temperature != sensor_data_display.temperature);
     break;
@@ -817,7 +822,9 @@ void DisplayByIndex(uint8_t mode)
   char buf[4] = {0};
 
   float t, h;
-  uint16_t temp, co2, voc, pm25, pm10;
+  uint16_t temp, co2, voc, pm25;
+
+  uint8_t screen_index;
 
   xSemaphoreTake(xSensorDataMutex, portMAX_DELAY);
   t = sensor_data_latest.temperature;
@@ -826,6 +833,10 @@ void DisplayByIndex(uint8_t mode)
   co2 = sensor_data_latest.co2;
   pm25 = sensor_data_latest.pm25;
   xSemaphoreGive(xSensorDataMutex);
+
+  xSemaphoreTake(xScreenCtrlMutex, portMAX_DELAY);
+  screen_index = display.index_next;
+  xSemaphoreGive(xScreenCtrlMutex);
 
   POINT_COLOR = WHITE;
   if (mode == SCROLL_MODE) {
@@ -839,8 +850,8 @@ void DisplayByIndex(uint8_t mode)
 
     memset(buf, 0, sizeof(buf));
     LCD_ShowImage(ICON_SENSOR_XPOS, ICON_SENSOR_YPOS,
-                  ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[sensor_next].cur_icon);
-    LCD_ShowSlide(screen[sensor_next].cur_index);
+                  ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[screen_index].cur_icon);
+    LCD_ShowSlide(screen[screen_index].cur_index);
   } else {
     // FIXED mode
     // Only redraw data, not redraw icon and bottom slides
@@ -848,7 +859,7 @@ void DisplayByIndex(uint8_t mode)
   }
 
   memset(buf, 0, sizeof(buf));
-  switch (sensor_next) {
+  switch (screen_index) {
   case 0:
     curval = t;
     sensor_data_display.temperature = curval;
@@ -870,22 +881,22 @@ void DisplayByIndex(uint8_t mode)
   case 2:
   case 3:
   case 4:
-    if (sensor_next == 1) {
+    if (screen_index == 1) {
       myval = (uint16_t)h;
       sensor_data_display.humidity = myval;
-    } else if (sensor_next == 2) {
+    } else if (screen_index == 2) {
       myval=co2;
       sensor_data_display.co2 = myval;
       if (myval > CO2_THRESHOLD) {
         POINT_COLOR = RED;
       }
-    } else if (sensor_next == 3) {
+    } else if (screen_index == 3) {
       myval = voc;
       sensor_data_display.co2 = myval;
       if (myval > TVOC_THRESHOLD) {
         POINT_COLOR = RED;
       }
-    } else if (sensor_next == 4) {
+    } else if (screen_index == 4) {
       myval = pm25;
       sensor_data_display.pm25 = myval;
       if (myval > PM25_THRESHOLD) {
@@ -929,7 +940,7 @@ void DisplayTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    if (sensor_current == sensor_next) {
+    if (display.index_curr == display.index_next) {
       // Stay at one sensor and update data if changed
       if (SensorDataChange()) {
         DisplayByIndex(FIXED_MODE);
@@ -940,7 +951,7 @@ void DisplayTask(void const * argument)
 
     // Switch sensor and update whole screen
     DisplayByIndex(SCROLL_MODE);
-    sensor_current = sensor_next;
+    display.index_curr = display.index_next;
     vTaskDelay(50);
   }
   /* USER CODE END 5 */
@@ -984,9 +995,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     printf(".");
     tim3_count++;
     if (tim3_count >= 3) {
-      sensor_next += 1;
-      if (sensor_next >= 5) {
-        sensor_next = 0;
+      display.index_next += 1;
+      if (display.index_next >= 5) {
+        display.index_next = 0;
       }
       tim3_count = 0;
     }
