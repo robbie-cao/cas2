@@ -123,7 +123,10 @@ uint16_t g_co2_prev = 500;
 uint16_t g_pm25_prev = 50, g_pm10_prev = 50;
 uint16_t g_voc_prev = 122;
 
-xSemaphoreHandle xSensorDataMutex;
+volatile uint8_t key_press_flag=0;
+
+xSemaphoreHandle xSensorDataMutex = NULL;
+xSemaphoreHandle xScreenCtrlMutex = NULL;
 
 struct LCD_Screen
 {
@@ -221,56 +224,50 @@ void Init_Keypad(void)
 
 void Keypad_handler(void)
 {
-  volatile uint8_t key_up=1;
-  if((KEY_RIGHT==0)&& key_up)
+  osDelay(60);
+
+  if (KEY_RIGHT == 0)
   {
-    osDelay(60);
-    if(KEY_RIGHT==0)
+    if (xSemaphoreTake(xScreenCtrlMutex, (TickType_t)10) == pdTRUE )
     {
-      key_up =0;
-      if(sensor_next>=0 && sensor_next<4)
+      if (sensor_next >= 0 && sensor_next < 4)
       {
-        sensor_next+=1;
+        sensor_next += 1;
       }
       else
       {
-        sensor_next=0;
+        sensor_next = 0;
       }
+      xSemaphoreGive( xScreenCtrlMutex );
     }
   }
-  else if((KEY_LEFT==0)&& key_up)
+  else if (KEY_LEFT == 0)
   {
-    osDelay(60);
-    if(KEY_LEFT==0)
+    if (xSemaphoreTake(xScreenCtrlMutex, (TickType_t)10) == pdTRUE )
     {
-      key_up=0;
-      if(sensor_next>0 && sensor_next<=4)
+      if (sensor_next > 0 && sensor_next <= 4)
       {
-        sensor_next-=1;
+        sensor_next -= 1;
       }
       else
       {
-        sensor_next=4;
+        sensor_next = 4;
       }
+      xSemaphoreGive( xScreenCtrlMutex );
     }
   }
-  else if((KEY_CENTER==0)&& key_up)
+  else if (KEY_CENTER == 0)
   {
-    osDelay(60);
-    if(KEY_CENTER==0)
+    if (xSemaphoreTake(xScreenCtrlMutex, (TickType_t)10) == pdTRUE )
     {
-      key_up =0;
       auto_switch_flag = !auto_switch_flag;
       if (auto_switch_flag) {
         HAL_TIM_Base_Start_IT(&htim3);
       } else {
         HAL_TIM_Base_Stop_IT(&htim3);
       }
+      xSemaphoreGive( xScreenCtrlMutex );
     }
-  }
-  else if((KEY_RIGHT==1)&&(KEY_LEFT==1)&&(KEY_CENTER==1))
-  {
-    key_up =1;
   }
 }
 /* USER CODE END 0 */
@@ -350,6 +347,7 @@ int main(void)
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   xSensorDataMutex = xSemaphoreCreateMutex();
+  xScreenCtrlMutex = xSemaphoreCreateMutex();
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
@@ -712,6 +710,16 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
 
   HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PD11~ PD13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn,0,0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
 /* USER CODE BEGIN 4 */
@@ -913,8 +921,6 @@ void DisplayTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    Keypad_handler();
-
     if (sensor_current == sensor_next) {
       // Stay at one sensor and update data if changed
       if (SensorDataChange()) {
@@ -928,7 +934,6 @@ void DisplayTask(void const * argument)
     DisplayByIndex(1);
     sensor_current = sensor_next;
     vTaskDelay(50);
-//    osDelay(1);
   }
   /* USER CODE END 5 */
 }
@@ -938,11 +943,14 @@ void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-//  Init_Keypad();
   for(;;)
   {
-//    Keypad_handler();
-    osDelay(200);
+    if (key_press_flag)
+    {
+       Keypad_handler();
+       key_press_flag = 0;
+    }
+    osDelay(100);
   }
   /* USER CODE END 5 */
 }
@@ -1030,6 +1038,26 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
 {
   /* Turn LED3 on: Transfer error in reception/transmission process */
   //BSP_LED_On(LED3);
+}
+
+/**
+  * @brief  EXTI line detection callbacks.
+  * @param  GPIO_Pin: Specifies the pins connected EXTI line
+  * @retval None
+  */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  switch (GPIO_Pin)
+  {
+  case GPIO_PIN_11:
+  case GPIO_PIN_12:
+  case GPIO_PIN_13:
+    key_press_flag = 1;
+    break;
+
+  default:
+    break;
+  }
 }
 
 void Timer_1MS_ISR(void)
