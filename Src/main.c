@@ -70,7 +70,15 @@
 #define KEY_LEFT         HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_13)
 #define KEY_CENTER       HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_12)
 
+enum osd_reflash
+{
+   FIXED_MODE=0,
+   SCROLL_MODE=1
+};
 
+SemaphoreHandle_t sem_osd = NULL;
+volatile uint8_t key_press_flag=0;
+volatile uint8_t osd_mode=FIXED_MODE;
 
 /* USER CODE BEGIN Includes */
 
@@ -97,7 +105,7 @@ osThreadId displayTaskHandle;
 
 uint32_t tim3_count = 0;
 uint8_t sensor_current = 0xFF;
-uint8_t sensor_next = 0;
+volatile uint8_t osd_index = 0;
 
 uint8_t one_byte = 'X';
 uint8_t recv_comm_buf[COMM_RECV_BUF_MAX];
@@ -107,8 +115,11 @@ uint8_t start_rcv_timer;
 uint8_t rcv_tim_delay;
 uint8_t comm_rcv_flag;
 
-float g_humidity = 70.0, g_temperature = 25.0;
-uint16_t g_co2 = 500, g_voc = 123, g_pm25 = 50, g_pm10 = 50;
+float temp_old=25.0, humd_old=70.0;
+uint16_t co2_old=500, pm25_old=50, tvoc_old=122;
+
+float temp_new, humd_new;
+uint16_t co2_new, pm25_new, tvoc_new;
 
 struct LCD_Screen
 {
@@ -116,7 +127,10 @@ struct LCD_Screen
    union value
    {
        float temp_val;
-       uint16_t other_val;
+       float humd_val;
+       uint16_t co2_val;
+       uint16_t tvoc_val;
+       uint16_t pm25_val;
    }sensor;
    uint8_t cur_index;
 };
@@ -165,93 +179,101 @@ void IAQ_Init(void)
 {
    /* Screen[0] For temp */
     screen[0].cur_icon =(uint8_t*)icon_temp;
-    screen[0].sensor.temp_val= (float)35.9;
+    screen[0].sensor.temp_val= temp_old;
     screen[0].cur_index = INDEX_0;
 
    /* Screen[1] For Humidity */
     screen[1].cur_icon =(uint8_t*)icon_hum;
-    screen[1].sensor.other_val= 71;
+    screen[1].sensor.humd_val=(uint16_t) humd_old;
     screen[1].cur_index = INDEX_1;
 
    /* Screen[2] For CO2*/
     screen[2].cur_icon =(uint8_t*)icon_co2;
-    screen[2].sensor.other_val= 420;
+    screen[2].sensor.co2_val= co2_old;
     screen[2].cur_index = INDEX_2;
 
   /* Screen[3] For TVOC*/
     screen[3].cur_icon =(uint8_t*)icon_tvoc;
-    screen[3].sensor.other_val= 106;
+    screen[3].sensor.tvoc_val= tvoc_old;
     screen[3].cur_index = INDEX_3;
 
   /* Screen[4] For PM25*/
     screen[4].cur_icon =(uint8_t*)icon_pm25;
-    screen[4].sensor.other_val= 68;
+    screen[4].sensor.pm25_val= pm25_old;
     screen[4].cur_index = INDEX_4;
 
 }
 
-void Init_Keypad(void)
+void EXTI15_10_IRQHandler(void)
 {
-  GPIO_InitTypeDef GPIO_Initstruct;
-
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-
-  GPIO_Initstruct.Pin=GPIO_PIN_11|GPIO_PIN_13|GPIO_PIN_12;
-  GPIO_Initstruct.Mode=GPIO_MODE_INPUT;
-  GPIO_Initstruct.Pull=GPIO_PULLUP;
-  GPIO_Initstruct.Speed=GPIO_SPEED_HIGH;
-  HAL_GPIO_Init(GPIOD,&GPIO_Initstruct);
-
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_11);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_12);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
 }
+
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    switch(GPIO_Pin)
+    {
+        case GPIO_PIN_11:
+        case GPIO_PIN_12:
+        case GPIO_PIN_13:
+             key_press_flag =1;
+
+        default: break;
+    }
+}
+
 
 void Keypad_handler(void)
 {
-  volatile uint8_t key_up=1;
-  if((KEY_RIGHT==0)&& key_up)
-  {
     osDelay(60);
+
     if(KEY_RIGHT==0)
     {
-      key_up =0;
-      if(sensor_next>=0 && sensor_next<4)
+      if(xSemaphoreTake( sem_osd, ( TickType_t ) 10 ) == pdTRUE )
+     {
+       if(osd_index>=0 && osd_index<4)
       {
-        sensor_next+=1;
+        osd_index+=1;
       }
       else
       {
-        sensor_next=0;
+        osd_index=0;
       }
+      xSemaphoreGive( sem_osd );
+     }
     }
-  }
-  else if((KEY_LEFT==0)&& key_up)
+
+  else if(KEY_LEFT==0)
   {
-    osDelay(60);
-    if(KEY_LEFT==0)
-    {
-      key_up=0;
-      if(sensor_next>0 && sensor_next<=4)
+     if(xSemaphoreTake( sem_osd, ( TickType_t ) 10 ) == pdTRUE )
+     {
+      if(osd_index>0 && osd_index<=4)
       {
-        sensor_next-=1;
+        osd_index-=1;
       }
       else
       {
-        sensor_next=4;
+        osd_index=4;
       }
-    }
+      xSemaphoreGive( sem_osd );
+     }
   }
-  else if((KEY_CENTER==0)&& key_up)
+   else if(KEY_CENTER==0)
   {
-    osDelay(60);
-    if(KEY_CENTER==0)
-    {
-      key_up =0;
-    }
-  }
-  else if((KEY_RIGHT==1)&&(KEY_LEFT==1)&&(KEY_CENTER==1))
-  {
-    key_up =1;
+     if(osd_mode==FIXED_MODE)
+     {
+        osd_mode=SCROLL_MODE;
+     }
+     else if(osd_mode==SCROLL_MODE)
+     {
+        osd_mode=FIXED_MODE;
+     }
   }
 }
+
 /* USER CODE END 0 */
 
 int main(void)
@@ -289,10 +311,11 @@ int main(void)
   MX_TIM3_Init();
   IAQ_Init();
   Comm_Init();
-  Init_Keypad();
+//  Init_Keypad();
+
 
   LCD_Init();
-  LCD_BKL_RESET;
+  LCD_BKL_SET;
 
   LCD_Clear(BLACK);
   POINT_COLOR=WHITE;
@@ -300,20 +323,21 @@ int main(void)
   /* USER CODE BEGIN 2 */
   printf("Start...\r\n");
 
-
   POINT_COLOR=WHITE;
   //          LCD_Switch_Off();
 
   LCD_ShowImage(LOGO_XPOS, LOGO_YPOS, LOGO_WIDTH, LOGO_HEIGHT, (uint8_t*)logo);
   HAL_Delay(1000);
   LCD_Clear(BLACK);
-
+#if 0
   PM25_StopAutoSend();
   PM25_StopAutoSend();
   PM25_StopAutoSend();
   HAL_Delay(10);
   PM25_StartMeasurement();
   HAL_Delay(100);
+#endif
+  sem_osd = xSemaphoreCreateMutex();
 
   /*##-2- Start the TIM Base generation in interrupt mode ####################*/
   /* Start Channel1 */
@@ -690,6 +714,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
 
   HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
+
+
+  /*Configure GPIO pins : PD11~ PD13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn,0,0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
@@ -707,31 +743,176 @@ void CommTask(void const * argument)
       comm_rcv_flag = 0;
       Comm_Response();
     } else {
-      vTaskDelay(10);
+      vTaskDelay(100);
     }
   }
 }
 
 void SensorTask(void const * argument)
 {
-  uint16_t temp;
+  uint16_t temp, pm10;
 
   /* Infinite loop */
   for(;;)
   {
-    printf("s");
-    // Read sensor data
-    Get_VocData(&temp, &g_voc);
-    Get_HumiTemp(&g_humidity, &g_temperature);
-    S8_Read(&g_co2);
-    PM25_Read(&g_pm25, &g_pm10);
-    printf("T: %.1f, H: %.1f, V: %d\r\n", g_temperature, g_humidity, g_voc);
-    printf("CO2: %d, PM25: %d\r\n", g_co2, g_pm25);
-    vTaskDelay(1000);
+   if(xSemaphoreTake( sem_osd, ( TickType_t )10) == pdTRUE )
+   {
+    Get_VocData(&temp, &voc_new);
+    Get_HumiTemp(&humd_new, &temp_new);
+    S8_Read(&co2_new);
+    PM25_Read(&pm25_new, &pm10);
+    printf("T: %.1f, H: %.1f, V: %d\r\n", temp_new, humd_new, voc_new);
+    printf("CO2: %d, PM25: %d\r\n", co2_new, pm25_new);
+
     LED_LEFT_TOGGLE();
     LED_CENTER_TOGGLE();
     LED_RIGHT_TOGGLE();
+    xSemaphoreGive( sem_osd );
+   }
+   osDelay(500);
   }
+}
+
+void DisplayTask(void const * argument)
+{
+   for(;;)
+   {
+        if(osd_mode==FIXED_MODE)
+        {
+           validate_fixed_screen();
+        }
+        else
+        {
+           validate_scroll_screen();
+        }
+        osDelay(1000);
+   }
+}
+
+validate_fixed_screen(void)
+{
+  if(xSemaphoreTake( sem_osd, ( TickType_t )10) == pdTRUE )
+  {
+     switch(osd_index)
+     {
+        case 1:  display_humd();
+                 break;
+        case 2:  display_co2();
+                 break;
+        case 3:  display_tvoc();
+                 break;
+        case 4:  display_pm25();
+                 break;
+        case 0:  display_temp();
+        default: break;
+     }
+     xSemaphoreGive( sem_osd );
+  }
+}
+
+validate_scroll_screen(void)
+{
+   uint8_t index;
+
+   for(index=0; index<5; index++)
+   {
+      if(xSemaphoreTake( sem_osd, ( TickType_t )10) == pdTRUE )
+      {
+           POINT_COLOR=WHITE;
+
+           LCD_ShowImage(ICON_SENSOR_XPOS, ICON_SENSOR_YPOS,
+                  ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[index].cur_icon);
+           LCD_ShowSlide(screen[index].cur_index);
+           switch(index)
+           {
+           case 0:  display_temp();
+                    break;
+           case 1:  display_humd();
+                    break;
+           case 2:  display_co2();
+                    break;
+           case 3:  display_tvoc();
+                    break;
+           case 4:  display_pm25();
+                    break;
+           }
+           xSemaphoreGive( sem_osd );
+      }
+   }
+}
+
+void display_temp(void)
+{
+  float curval;
+  uint8_t bit_width;
+  char buf[4]={0};
+  curval=temp_new;
+  if(temp_new!=temp_old)
+  {
+      sprintf(buf,"%3.1f",curval);
+      if(curval<0) //Negative value
+      {
+        LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
+      }
+      else if(curval>=0 && curval<10)
+      {
+        bit_width=2;
+      }else if(curval>=10 && curval<100)
+      {
+        bit_width=3;
+      }
+      LCD_ShowDigtStr(buf, 1, bit_width);
+      temp_old = temp_new;
+  }
+  else
+  {
+    osDelay(500);
+  }
+}
+
+void display_humd(void)
+{
+     uint16_t curval;
+     uint8_t bit_width;
+     char buf[4]={0};
+
+     curval= humd_new;
+     sprintf(buf, "%d", curval);
+      if(curval<0) //Negative value
+      {
+        LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
+      }
+      else if(curval>=0 && curval<10)
+      {
+        bit_width=1;
+      }else if(curval>=10 && curval<100)
+      {
+        bit_width=2;
+      }
+      else if(curval>=100 && curval<1000)
+      {
+        bit_width=3;
+      }
+      else if(curval>=1000 && curval<10000)
+      {
+        bit_width=4;
+      }
+      LCD_ShowDigtStr(buf, 0, bit_width);
+}
+
+void display_co2(void)
+{
+
+}
+
+void display_tvoc(void)
+{
+
+}
+
+void display_pm25(void)
+{
+
 }
 
 void DisplayTask(void const * argument)
@@ -746,15 +927,19 @@ void DisplayTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    Keypad_handler();
+#if 0
     if (sensor_current == sensor_next) {
       vTaskDelay(10);
       continue ;
     }
+#endif
+   if(xSemaphoreTake( sem_osd, ( TickType_t ) 10 ) == pdTRUE )
+  {
     //LCD_Scroll_On(LEFT);
     LCD_Clear(BLACK);
 
- //   LCD_MaskImage(0,0,480,320, BLACK);
+//    LCD_MaskImage(0,0,480,320, BLACK);
+//    LCD_MaskDigit(BLACK);
     POINT_COLOR=WHITE;
 
     memset(buf, 0, sizeof(buf));
@@ -828,10 +1013,11 @@ void DisplayTask(void const * argument)
     default:
       break;
     }
-    
+    xSemaphoreGive( sem_osd );
     sensor_current = sensor_next;
-    vTaskDelay(200);
-//    osDelay(1);
+  }
+    osDelay(2000);
+
   }
   /* USER CODE END 5 */
 }
@@ -841,11 +1027,14 @@ void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-//  Init_Keypad();
   for(;;)
   {
-//    Keypad_handler();
-    osDelay(200);
+    if(key_press_flag)
+    {
+       Keypad_handler();
+       key_press_flag=0;
+    }
+    osDelay(100);
   }
   /* USER CODE END 5 */
 }
