@@ -758,8 +758,12 @@ void SensorTask(void const * argument)
     sensor_data_latest.pm25 = pm25;
     xSemaphoreGive(xSensorDataMutex);
 
-    printf("T: %.1f, H: %.1f, V: %d\r\n", sensor_data_latest.temperature, sensor_data_latest.humidity, sensor_data_latest.tvoc);
-    printf("CO2: %d, PM25: %d\r\n", sensor_data_latest.co2, sensor_data_latest.pm25);
+    printf("T: %.1f, H: %.1f, V: %d, CO2: %d, PM25: %d\r\n",
+            sensor_data_latest.temperature,
+            sensor_data_latest.humidity,
+            sensor_data_latest.tvoc,
+            sensor_data_latest.co2,
+            sensor_data_latest.pm25);
 
     LED_LEFT_TOGGLE();
     LED_CENTER_TOGGLE();
