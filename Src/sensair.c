@@ -1,8 +1,6 @@
 #include <string.h>
+#include "config.h"
 #include "sensair.h"
-#include "main.h"
-
-#define DEBUG 0
 
 #define TIMEOUT         500
 
@@ -19,7 +17,7 @@ uint8_t S8_Read(uint16_t *c)
   memset(rcv, 0, sizeof(rcv));
   HAL_UART_Transmit(&CO2_S8_UART, cmd, 8, TIMEOUT);
   HAL_UART_Receive(&CO2_S8_UART, rcv, 7, TIMEOUT);
-#if DEBUG
+#if SENSOR_DATA_DEBUG
   for (int i = 0; i < 7; i++) {
     printf("0x%02x ", rcv[i]);
   }

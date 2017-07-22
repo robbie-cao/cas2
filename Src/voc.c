@@ -1,14 +1,13 @@
 #include <string.h>
-#include "voc.h"
+#include "config.h"
 #include "i2c.h"
-
-#define DEBUG   1
+#include "voc.h"
 
 extern uint16_t g_voc_old;
 
 #define IAQ_CORE_I2C_ADDRESS    (0x5A << 1)
-#define IAQ_CORE_I2C_ADDRESS_W    (0xB4)
-#define IAQ_CORE_I2C_ADDRESS_R    (0xB5)
+#define IAQ_CORE_I2C_ADDRESS_W  (0xB4)
+#define IAQ_CORE_I2C_ADDRESS_R  (0xB5)
 
 void Voc_Init(void)
 {
@@ -21,7 +20,7 @@ ErrorStatus Read_VocData(uint16_t* pDataCO2 ,uint16_t* pDataVOC)
 
   memset(buf, 0, sizeof(buf));
   res = I2C_Read(IAQ_CORE_I2C_ADDRESS, buf, sizeof(buf));
-#if DEBUG
+#if SENSOR_DATA_DEBUG
   printf("IAQ R - %d\r\n", res);
   printf("Data: ");
   for (int i = 0; i < sizeof(buf); i++) {

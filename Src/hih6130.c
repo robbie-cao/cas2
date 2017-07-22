@@ -1,9 +1,8 @@
 #include <string.h>
 #include <math.h>
+#include "config.h"
 #include "i2c.h"
 #include "hih6130.h"
-
-#define DEBUG   0
 
 extern float g_hum_old, g_temp_old;
 
@@ -24,7 +23,7 @@ ErrorStatus HIH6130_ReadHumiTemp(uint16_t* pDataH, uint16_t* pDataT)
 
   memset(buf, 0, sizeof(buf));
   res = I2C_Write(HIH6130_I2C_ADDRESS, NULL, 0);
-#if DEBUG
+#if SENSOR_DATA_DEBUG
   printf("I2C W - %d\r\n", res);
 #endif
   if (res != HAL_OK) {
@@ -33,7 +32,7 @@ ErrorStatus HIH6130_ReadHumiTemp(uint16_t* pDataH, uint16_t* pDataT)
   /* Wait some time before read operation */
   HAL_Delay(60);
   res = I2C_Read(HIH6130_I2C_ADDRESS, buf, sizeof(buf));
-#if DEBUG
+#if SENSOR_DATA_DEBUG
   printf("H/T R - %d\r\n", res);
   printf("Data: ");
   for (int i = 0; i < sizeof(buf); i++) {

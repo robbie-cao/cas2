@@ -1,8 +1,6 @@
 #include <string.h>
+#include "config.h"
 #include "pm25.h"
-#include "main.h"
-
-#define DEBUG   1
 
 #define TIMEOUT         500
 
@@ -19,7 +17,7 @@ uint8_t PM25_EnableAutoSend(void)
   memset(rcv, 0, sizeof(rcv));
   HAL_UART_Transmit(&PM25_UART, cmd, 4, TIMEOUT);
   HAL_UART_Receive(&PM25_UART, rcv, 2, TIMEOUT);
-#if DEBUG
+#if SENSOR_DATA_DEBUG
   for (int i = 0; i < 2; i++) {
     printf("0x%02x ", rcv[i]);
   }
@@ -40,7 +38,7 @@ uint8_t PM25_StopAutoSend(void)
   memset(rcv, 0, sizeof(rcv));
   HAL_UART_Transmit(&PM25_UART, cmd, 4, TIMEOUT);
   HAL_UART_Receive(&PM25_UART, rcv, 2, TIMEOUT);
-#if DEBUG
+#if SENSOR_DATA_DEBUG
   for (int i = 0; i < 2; i++) {
     printf("0x%02x ", rcv[i]);
   }
@@ -61,7 +59,7 @@ uint8_t PM25_StartMeasurement(void)
   memset(rcv, 0, sizeof(rcv));
   HAL_UART_Transmit(&PM25_UART, cmd, 4, TIMEOUT);
   HAL_UART_Receive(&PM25_UART, rcv, 2, TIMEOUT);
-#if DEBUG
+#if SENSOR_DATA_DEBUG
   for (int i = 0; i < 2; i++) {
     printf("0x%02x ", rcv[i]);
   }
@@ -82,7 +80,7 @@ uint8_t PM25_StopMeasurement(void)
   memset(rcv, 0, sizeof(rcv));
   HAL_UART_Transmit(&PM25_UART, cmd, 4, TIMEOUT);
   HAL_UART_Receive(&PM25_UART, rcv, 2, TIMEOUT);
-#if DEBUG
+#if SENSOR_DATA_DEBUG
   for (int i = 0; i < 2; i++) {
     printf("0x%02x ", rcv[i]);
   }
@@ -106,7 +104,7 @@ uint8_t PM25_Read(uint16_t *pm25, uint16_t *pm10)
   memset(rcv, 0, sizeof(rcv));
   HAL_UART_Transmit(&PM25_UART, cmd, 4, TIMEOUT);
   HAL_UART_Receive(&PM25_UART, rcv, 10, TIMEOUT);
-#if DEBUG
+#if SENSOR_DATA_DEBUG
   for (i = 0; i < RECV_SIZE; i++) {
     printf("0x%02x ", rcv[i]);
   }
