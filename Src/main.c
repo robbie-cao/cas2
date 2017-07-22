@@ -71,6 +71,11 @@
 #define KEY_LEFT         HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_13)
 #define KEY_CENTER       HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_12)
 
+enum screen_update_mode
+{
+   FIXED_MODE = 0,
+   SCROLL_MODE = 1
+};
 
 
 /* USER CODE BEGIN Includes */
@@ -792,7 +797,7 @@ uint8_t SensorDataChange(void)
   return changed;
 }
 
-void DisplayByIndex(uint8_t slide)
+void DisplayByIndex(uint8_t mode)
 {
   float curval;
   uint16_t myval;
@@ -811,7 +816,8 @@ void DisplayByIndex(uint8_t slide)
   xSemaphoreGive(xSensorDataMutex);
 
   POINT_COLOR = WHITE;
-  if (slide) {
+  if (mode == SCROLL_MODE) {
+    // SCROLL mode
     // Clear whole screen and redraw icon and bottom slides
 
     //LCD_Scroll_On(LEFT);
@@ -824,6 +830,7 @@ void DisplayByIndex(uint8_t slide)
                   ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[sensor_next].cur_icon);
     LCD_ShowSlide(screen[sensor_next].cur_index);
   } else {
+    // FIXED mode
     // Only redraw data, not redraw icon and bottom slides
     LCD_Fill(DIGIT_XPOS, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
   }
@@ -912,14 +919,14 @@ void DisplayTask(void const * argument)
     if (sensor_current == sensor_next) {
       // Stay at one sensor and update data if changed
       if (SensorDataChange()) {
-        DisplayByIndex(0);
+        DisplayByIndex(FIXED_MODE);
       }
       vTaskDelay(50);
       continue ;
     }
 
     // Switch sensor and update whole screen
-    DisplayByIndex(1);
+    DisplayByIndex(SCROLL_MODE);
     sensor_current = sensor_next;
     vTaskDelay(50);
   }
