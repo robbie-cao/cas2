@@ -128,11 +128,6 @@ uint8_t comm_rcv_flag;
 
 uint8_t auto_switch_flag = 0;
 
-float g_hum_prev = 70.0, g_temp_prev = 25.0;
-uint16_t g_co2_prev = 500;
-uint16_t g_pm25_prev = 50, g_pm10_prev = 50;
-uint16_t g_voc_prev = 122;
-
 volatile uint8_t key_press_flag = 0;
 
 xSemaphoreHandle xSensorDataMutex = NULL;
@@ -743,16 +738,16 @@ void CommTask(void const * argument)
 void SensorTask(void const * argument)
 {
   float t, h;
-  uint16_t temp, co2, voc, pm25, pm10;
+  uint16_t co2, voc, co2eq, pm25, pm10;
 
   /* Infinite loop */
   for(;;)
   {
     printf("s");
     // Read sensor data
-    Get_VocData(&temp, &voc);
     Get_HumiTemp(&h, &t);
     S8_Read(&co2);
+    Get_VocData(&co2eq, &voc);
     PM25_Read(&pm25, &pm10);
 
     xSemaphoreTake(xSensorDataMutex, portMAX_DELAY);
@@ -780,19 +775,19 @@ uint8_t SensorDataChange(void)
 
   switch (sensor_current) {
   case 0:
-    changed = (sensor_data_latest.temperature != g_temp_prev);
+    changed = (sensor_data_latest.temperature != sensor_data_display.temperature);
     break;
   case 1:
-    changed = ((uint16_t)sensor_data_latest.humidity != (uint16_t)g_hum_prev);
+    changed = ((uint16_t)sensor_data_latest.humidity != (uint16_t)sensor_data_display.humidity);
     break;
   case 2:
-    changed = (sensor_data_latest.co2 != g_co2_prev);
+    changed = (sensor_data_latest.co2 != sensor_data_display.co2);
     break;
   case 3:
-    changed = (sensor_data_latest.tvoc != g_voc_prev);
+    changed = (sensor_data_latest.tvoc != sensor_data_display.co2);
     break;
   case 4:
-    changed = (sensor_data_latest.pm25 != g_pm25_prev);
+    changed = (sensor_data_latest.pm25 != sensor_data_display.pm25);
     break;
   default:
     break;
@@ -844,7 +839,7 @@ void DisplayByIndex(uint8_t mode)
   switch (sensor_next) {
   case 0:
     curval = t;
-    g_temp_prev = curval;
+    sensor_data_display.temperature = curval;
     sprintf(buf,"%3.1f",curval);
     if(curval<0) //Negative value
     {
@@ -865,22 +860,22 @@ void DisplayByIndex(uint8_t mode)
   case 4:
     if (sensor_next == 1) {
       myval=(uint16_t)h;
-      g_hum_prev = myval;
+      sensor_data_display.humidity = myval;
     } else if (sensor_next == 2) {
       myval=co2;
-      g_co2_prev = myval;
+      sensor_data_display.co2 = myval;
       if (myval > CO2_THRESHOLD) {
         POINT_COLOR=RED;
       }
     } else if (sensor_next == 3) {
       myval=voc;
-      g_voc_prev = myval;
+      sensor_data_display.co2 = myval;
       if (myval > TVOC_THRESHOLD) {
         POINT_COLOR=RED;
       }
     } else if (sensor_next == 4) {
       myval=pm25;
-      g_pm25_prev = myval;
+      sensor_data_display.pm25 = myval;
       if (myval > PM25_THRESHOLD) {
         POINT_COLOR=RED;
       }
