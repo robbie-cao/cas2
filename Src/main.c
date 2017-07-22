@@ -176,32 +176,32 @@ int fputc(int ch, FILE *f)
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-void IAQ_Init(void)
+void Screen_Init(void)
 {
-   /* Screen[0] For temp */
-    screen[0].cur_icon =(uint8_t*)icon_temp;
-    screen[0].sensor.temp_val= (float)35.9;
-    screen[0].cur_index = INDEX_0;
+  /* Screen[0] For temp */
+  screen[0].cur_icon =(uint8_t*)icon_temp;
+  screen[0].sensor.temp_val= (float)35.9;
+  screen[0].cur_index = INDEX_0;
 
-   /* Screen[1] For Humidity */
-    screen[1].cur_icon =(uint8_t*)icon_hum;
-    screen[1].sensor.other_val= 71;
-    screen[1].cur_index = INDEX_1;
+  /* Screen[1] For Humidity */
+  screen[1].cur_icon =(uint8_t*)icon_hum;
+  screen[1].sensor.other_val= 71;
+  screen[1].cur_index = INDEX_1;
 
-   /* Screen[2] For CO2*/
-    screen[2].cur_icon =(uint8_t*)icon_co2;
-    screen[2].sensor.other_val= 420;
-    screen[2].cur_index = INDEX_2;
+  /* Screen[2] For CO2*/
+  screen[2].cur_icon =(uint8_t*)icon_co2;
+  screen[2].sensor.other_val= 420;
+  screen[2].cur_index = INDEX_2;
 
   /* Screen[3] For TVOC*/
-    screen[3].cur_icon =(uint8_t*)icon_tvoc;
-    screen[3].sensor.other_val= 106;
-    screen[3].cur_index = INDEX_3;
+  screen[3].cur_icon =(uint8_t*)icon_tvoc;
+  screen[3].sensor.other_val= 106;
+  screen[3].cur_index = INDEX_3;
 
   /* Screen[4] For PM25*/
-    screen[4].cur_icon =(uint8_t*)icon_pm25;
-    screen[4].sensor.other_val= 68;
-    screen[4].cur_index = INDEX_4;
+  screen[4].cur_icon =(uint8_t*)icon_pm25;
+  screen[4].sensor.other_val= 68;
+  screen[4].cur_index = INDEX_4;
 
 }
 
@@ -308,7 +308,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   MX_TIM3_Init();
-  IAQ_Init();
+  Screen_Init();
   Comm_Init();
   Init_Keypad();
 
