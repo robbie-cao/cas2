@@ -123,21 +123,24 @@ uint16_t g_co2_prev = 500;
 uint16_t g_pm25_prev = 50, g_pm10_prev = 50;
 uint16_t g_voc_prev = 122;
 
-volatile uint8_t key_press_flag=0;
+volatile uint8_t key_press_flag = 0;
 
 xSemaphoreHandle xSensorDataMutex = NULL;
 xSemaphoreHandle xScreenCtrlMutex = NULL;
 
-struct LCD_Screen
+typedef struct LCD_Screen
 {
-   uint8_t* cur_icon;
-   union value
-   {
-       float temp_val;
-       uint16_t other_val;
-   }sensor;
-   uint8_t cur_index;
-};
+  uint8_t* cur_icon;
+  union value
+  {
+    float       temp_val;
+    float       humd_val;
+    uint16_t    co2_val;
+    uint16_t    tvoc_val;
+    uint16_t    pm25_val;
+  } sensor;
+  uint8_t cur_index;
+} LCD_Screen_t;
 
 struct LCD_Screen screen[5];
 
@@ -181,46 +184,32 @@ int fputc(int ch, FILE *f)
 /* USER CODE BEGIN 0 */
 void Screen_Init(void)
 {
-  /* Screen[0] For temp */
-  screen[0].cur_icon =(uint8_t*)icon_temp;
-  screen[0].sensor.temp_val= (float)35.9;
+  /* screen[0] for Temperature */
+  screen[0].cur_icon = (uint8_t*)icon_temp;
+  screen[0].sensor.temp_val = g_temp_old;
   screen[0].cur_index = INDEX_0;
 
-  /* Screen[1] For Humidity */
-  screen[1].cur_icon =(uint8_t*)icon_hum;
-  screen[1].sensor.other_val= 71;
+  /* screen[1] For Humidity */
+  screen[1].cur_icon = (uint8_t*)icon_hum;
+  screen[1].sensor.humd_val = (uint16_t) g_hum_old;
   screen[1].cur_index = INDEX_1;
 
-  /* Screen[2] For CO2*/
-  screen[2].cur_icon =(uint8_t*)icon_co2;
-  screen[2].sensor.other_val= 420;
+  /* screen[2] For CO2*/
+  screen[2].cur_icon = (uint8_t*)icon_co2;
+  screen[2].sensor.co2_val = g_co2_old;
   screen[2].cur_index = INDEX_2;
 
-  /* Screen[3] For TVOC*/
-  screen[3].cur_icon =(uint8_t*)icon_tvoc;
-  screen[3].sensor.other_val= 106;
+  /* screen[3] For TVOC*/
+  screen[3].cur_icon = (uint8_t*)icon_tvoc;
+  screen[3].sensor.tvoc_val= g_voc_old;
   screen[3].cur_index = INDEX_3;
 
-  /* Screen[4] For PM25*/
-  screen[4].cur_icon =(uint8_t*)icon_pm25;
-  screen[4].sensor.other_val= 68;
+  /* screen[4] For PM25*/
+  screen[4].cur_icon = (uint8_t*)icon_pm25;
+  screen[4].sensor.pm25_val = g_pm25_old;
   screen[4].cur_index = INDEX_4;
-
 }
 
-void Init_Keypad(void)
-{
-  GPIO_InitTypeDef GPIO_Initstruct;
-
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-
-  GPIO_Initstruct.Pin=GPIO_PIN_11|GPIO_PIN_13|GPIO_PIN_12;
-  GPIO_Initstruct.Mode=GPIO_MODE_INPUT;
-  GPIO_Initstruct.Pull=GPIO_PULLUP;
-  GPIO_Initstruct.Speed=GPIO_SPEED_HIGH;
-  HAL_GPIO_Init(GPIOD,&GPIO_Initstruct);
-
-}
 
 void Keypad_handler(void)
 {
@@ -307,7 +296,6 @@ int main(void)
   MX_TIM3_Init();
   Screen_Init();
   Comm_Init();
-  Init_Keypad();
 
   LCD_Init();
   LCD_BKL_RESET;
