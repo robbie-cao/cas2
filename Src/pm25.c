@@ -126,7 +126,7 @@ uint8_t PM25_Read(uint16_t *pm25, uint16_t *pm10)
 
   // checksum
   cs = (65536 - rcv[i] - rcv[i + 1] - rcv[i + 2] - rcv[i + 3] - rcv[i + 4] - rcv[i + 5] - rcv[i + 6]) % 256;
-  if (cs != rcv[i+7]) {
+  if (rcv[i+7] == 0 || cs != rcv[i+7]) {
     *pm25 = g_pm25_old;
     *pm10 = g_pm10_old;
     return ERROR;
