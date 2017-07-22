@@ -124,8 +124,6 @@ uint8_t start_rcv_timer;
 uint8_t rcv_tim_delay;
 uint8_t comm_rcv_flag;
 
-uint8_t auto_switch_flag = 0;
-
 volatile uint8_t key_press_flag = 0;
 
 xSemaphoreHandle xSensorDataMutex = NULL;
@@ -268,8 +266,8 @@ void Keypad_handler(void)
   {
     if (xSemaphoreTake(xScreenCtrlMutex, (TickType_t)10) == pdTRUE )
     {
-      auto_switch_flag = !auto_switch_flag;
-      if (auto_switch_flag) {
+      display.mode = !display.mode;
+      if (display.mode) {
         HAL_TIM_Base_Start_IT(&htim3);
       } else {
         HAL_TIM_Base_Stop_IT(&htim3);
@@ -320,7 +318,7 @@ int main(void)
   LCD_BKL_RESET;
 
   LCD_Clear(BLACK);
-  POINT_COLOR=WHITE;
+  POINT_COLOR = WHITE;
 
   /* USER CODE BEGIN 2 */
   printf("Start...\r\n");
@@ -786,25 +784,30 @@ void SensorTask(void const * argument)
   }
 }
 
-uint8_t SensorDataChange(void)
+uint8_t DisplayDataChanged(void)
 {
   uint8_t changed = 0;
+  uint8_t screen_index_curr = 0;
 
-  switch (display.index_curr) {
+  xSemaphoreTake(xScreenCtrlMutex, portMAX_DELAY);
+  screen_index_curr = display.index_curr;
+  xSemaphoreGive(xScreenCtrlMutex);
+
+  switch (screen_index_curr) {
   case 0:
-    changed = (sensor_data_latest.temperature != sensor_data_display.temperature);
+    changed = (display.data_to_display.temperature != display.data_on_screen.temperature);
     break;
   case 1:
-    changed = ((uint16_t)sensor_data_latest.humidity != (uint16_t)sensor_data_display.humidity);
+    changed = ((uint16_t)display.data_to_display.humidity != (uint16_t)display.data_on_screen.humidity);
     break;
   case 2:
-    changed = (sensor_data_latest.co2 != sensor_data_display.co2);
+    changed = (display.data_to_display.co2 != display.data_on_screen.co2);
     break;
   case 3:
-    changed = (sensor_data_latest.tvoc != sensor_data_display.co2);
+    changed = (display.data_to_display.tvoc != display.data_on_screen.tvoc);
     break;
   case 4:
-    changed = (sensor_data_latest.pm25 != sensor_data_display.pm25);
+    changed = (display.data_to_display.pm25 != display.data_on_screen.pm25);
     break;
   default:
     break;
@@ -814,33 +817,41 @@ uint8_t SensorDataChange(void)
   return changed;
 }
 
-void DisplayByIndex(uint8_t mode)
+void UpdateDataToDisplay(void)
+{
+  xSemaphoreTake(xSensorDataMutex, portMAX_DELAY);
+
+  display.data_to_display.temperature = sensor_data_latest.temperature;
+  display.data_to_display.humidity = sensor_data_latest.humidity;
+  display.data_to_display.tvoc = sensor_data_latest.tvoc;
+  display.data_to_display.co2 = sensor_data_latest.co2;
+  display.data_to_display.pm25 = sensor_data_latest.pm25;
+
+  screen[0].sensor.temp_val = sensor_data_latest.temperature;
+  screen[1].sensor.humd_val = (uint16_t)sensor_data_latest.humidity;
+  screen[2].sensor.co2_val = sensor_data_latest.co2;
+  screen[3].sensor.tvoc_val= sensor_data_latest.tvoc;
+  screen[4].sensor.pm25_val = sensor_data_latest.pm25;
+
+  xSemaphoreGive(xSensorDataMutex);
+}
+
+void UpdateDataOnScreen(void)
+{
+  memcpy(&display.data_on_screen, &display.data_to_display, sizeof(SensorData_t));
+}
+
+
+void UpdateDisplay(uint8_t mode, uint8_t index_curr, uint8_t index_next)
 {
   float curval;
   uint16_t myval;
   uint8_t bit_width;
   char buf[4] = {0};
 
-  float t, h;
-  uint16_t temp, co2, voc, pm25;
-
-  uint8_t screen_index;
-
-  xSemaphoreTake(xSensorDataMutex, portMAX_DELAY);
-  t = sensor_data_latest.temperature;
-  h = sensor_data_latest.humidity;
-  voc = sensor_data_latest.tvoc;
-  co2 = sensor_data_latest.co2;
-  pm25 = sensor_data_latest.pm25;
-  xSemaphoreGive(xSensorDataMutex);
-
-  xSemaphoreTake(xScreenCtrlMutex, portMAX_DELAY);
-  screen_index = display.index_next;
-  xSemaphoreGive(xScreenCtrlMutex);
-
   POINT_COLOR = WHITE;
-  if (mode == SCROLL_MODE) {
-    // SCROLL mode
+  if (mode == SCROLL_MODE || index_curr != index_next) {
+    // SCROLL mode or FIXED mode for the first time
     // Clear whole screen and redraw icon and bottom slides
 
     //LCD_Scroll_On(LEFT);
@@ -850,8 +861,8 @@ void DisplayByIndex(uint8_t mode)
 
     memset(buf, 0, sizeof(buf));
     LCD_ShowImage(ICON_SENSOR_XPOS, ICON_SENSOR_YPOS,
-                  ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[screen_index].cur_icon);
-    LCD_ShowSlide(screen[screen_index].cur_index);
+                  ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[index_next].cur_icon);
+    LCD_ShowSlide(screen[index_next].cur_index);
   } else {
     // FIXED mode
     // Only redraw data, not redraw icon and bottom slides
@@ -859,12 +870,11 @@ void DisplayByIndex(uint8_t mode)
   }
 
   memset(buf, 0, sizeof(buf));
-  switch (screen_index) {
+  switch (index_next) {
   case 0:
-    curval = t;
-    sensor_data_display.temperature = curval;
+    curval = display.data_to_display.temperature;
     sprintf(buf,"%3.1f", curval);
-    if (curval <0 ) //Negative value
+    if (curval < 0 ) //Negative value
     {
       LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
     }
@@ -881,24 +891,20 @@ void DisplayByIndex(uint8_t mode)
   case 2:
   case 3:
   case 4:
-    if (screen_index == 1) {
-      myval = (uint16_t)h;
-      sensor_data_display.humidity = myval;
-    } else if (screen_index == 2) {
-      myval=co2;
-      sensor_data_display.co2 = myval;
+    if (index_next == 1) {
+      myval = (uint16_t)display.data_to_display.humidity;
+    } else if (index_next == 2) {
+      myval = display.data_to_display.co2;
       if (myval > CO2_THRESHOLD) {
         POINT_COLOR = RED;
       }
-    } else if (screen_index == 3) {
-      myval = voc;
-      sensor_data_display.co2 = myval;
+    } else if (index_next == 3) {
+      myval = display.data_to_display.tvoc;
       if (myval > TVOC_THRESHOLD) {
         POINT_COLOR = RED;
       }
-    } else if (screen_index == 4) {
-      myval = pm25;
-      sensor_data_display.pm25 = myval;
+    } else if (index_next == 4) {
+      myval = display.data_to_display.pm25;
       if (myval > PM25_THRESHOLD) {
         POINT_COLOR = RED;
       }
@@ -937,21 +943,43 @@ void DisplayTask(void const * argument)
 {
 
   /* USER CODE BEGIN 5 */
+//  UpdateDataToDisplay();
+//  UpdateDisplay(SCROLL_MODE, 0);
+//  UpdateDataOnScreen();
+
   /* Infinite loop */
   for(;;)
   {
-    if (display.index_curr == display.index_next) {
+    uint8_t display_mode = 0;
+    uint8_t screen_index_curr = 0;
+    uint8_t screen_index_next = 0;
+
+    xSemaphoreTake(xScreenCtrlMutex, portMAX_DELAY);
+    display_mode = display.mode;
+    screen_index_curr = display.index_curr;
+    screen_index_next = display.index_next;
+    xSemaphoreGive(xScreenCtrlMutex);
+
+    if (screen_index_curr == screen_index_next) {
       // Stay at one sensor and update data if changed
-      if (SensorDataChange()) {
-        DisplayByIndex(FIXED_MODE);
+      UpdateDataToDisplay();
+      if (DisplayDataChanged()) {
+        UpdateDisplay(display_mode, screen_index_curr, screen_index_next);
+        UpdateDataOnScreen();
       }
       vTaskDelay(50);
       continue ;
     }
 
     // Switch sensor and update whole screen
-    DisplayByIndex(SCROLL_MODE);
+    UpdateDataToDisplay();
+    UpdateDisplay(display_mode, screen_index_curr, screen_index_next);
+    UpdateDataOnScreen();
+
+    xSemaphoreTake(xScreenCtrlMutex, portMAX_DELAY);
     display.index_curr = display.index_next;
+    xSemaphoreGive(xScreenCtrlMutex);
+
     vTaskDelay(50);
   }
   /* USER CODE END 5 */
