@@ -3,11 +3,13 @@
 #include "i2c.h"
 #include "voc.h"
 
-extern uint16_t g_voc_old;
-
 #define IAQ_CORE_I2C_ADDRESS    (0x5A << 1)
 #define IAQ_CORE_I2C_ADDRESS_W  (0xB4)
 #define IAQ_CORE_I2C_ADDRESS_R  (0xB5)
+
+// Store the correct data reading from sensor
+// and use it if there's error when reading next data from sensor
+static uint16_t s_voc_old = 122, s_co2eq_old = 501;
 
 void Voc_Init(void)
 {
@@ -56,15 +58,16 @@ ErrorStatus Read_VocData(uint16_t* pDataCO2 ,uint16_t* pDataVOC)
  */
 void Get_VocData(uint16_t* pDataCO2 ,uint16_t* pDataVOC)
 {
-  uint16_t co2, voc;
+  uint16_t co2eq, voc;
 
-  if (Read_VocData(&co2, &voc) == SUCCESS) {
-    *pDataCO2 = (uint16_t)co2;
+  if (Read_VocData(&co2eq, &voc) == SUCCESS) {
+    *pDataCO2 = (uint16_t)co2eq;
     *pDataVOC = (uint16_t)voc;
-    g_voc_old = voc;
+    s_co2eq_old = co2eq;
+    s_voc_old = voc;
   } else {
     /* Render certain error values to display */
-    *pDataCO2 = 0;
-    *pDataVOC = g_voc_old;
+    *pDataCO2 = s_co2eq_old;
+    *pDataVOC = s_voc_old;
   }
 }

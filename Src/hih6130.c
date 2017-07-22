@@ -4,7 +4,9 @@
 #include "i2c.h"
 #include "hih6130.h"
 
-extern float g_hum_old, g_temp_old;
+// Store the correct data reading from sensor
+// and use it if there's error when reading next data from sensor
+static float s_hum_old = 70.0, s_temp_old = 25.0;
 
 void HIH6130_Init(void)
 {
@@ -70,11 +72,11 @@ void Get_HumiTemp(float* rh, float* tc)
     rt = round((temp * 1.007e-2 - 40.0) * 10.0) / 10.0;     // -> xx.x
     *rh = (float)humi * 6.10e-3;
     *tc = (float)rt;
-    g_hum_old = *rh;
-    g_temp_old = *tc;
+    s_hum_old = *rh;
+    s_temp_old = *tc;
   } else {
     /* Render certain error values to display */
-    *rh = g_hum_old;
-    *tc = g_temp_old;
+    *rh = s_hum_old;
+    *tc = s_temp_old;
   }
 }

@@ -118,11 +118,6 @@ uint8_t auto_switch_flag = 0;
 float g_humidity = 70.0, g_temperature = 25.0;
 uint16_t g_co2 = 500, g_voc = 123, g_pm25 = 50, g_pm10 = 50;
 
-float g_hum_old = 70.0, g_temp_old = 25.0;
-uint16_t g_co2_old = 500;
-uint16_t g_pm25_old = 50, g_pm10_old = 50;
-uint16_t g_voc_old = 122;
-
 float g_hum_prev = 70.0, g_temp_prev = 25.0;
 uint16_t g_co2_prev = 500;
 uint16_t g_pm25_prev = 50, g_pm10_prev = 50;
@@ -191,27 +186,27 @@ void Screen_Init(void)
 {
   /* screen[0] for Temperature */
   screen[0].cur_icon = (uint8_t*)icon_temp;
-  screen[0].sensor.temp_val = g_temp_old;
+  screen[0].sensor.temp_val = g_temperature;
   screen[0].cur_index = INDEX_0;
 
   /* screen[1] For Humidity */
   screen[1].cur_icon = (uint8_t*)icon_hum;
-  screen[1].sensor.humd_val = (uint16_t) g_hum_old;
+  screen[1].sensor.humd_val = (uint16_t) g_humidity;
   screen[1].cur_index = INDEX_1;
 
   /* screen[2] For CO2*/
   screen[2].cur_icon = (uint8_t*)icon_co2;
-  screen[2].sensor.co2_val = g_co2_old;
+  screen[2].sensor.co2_val = g_co2;
   screen[2].cur_index = INDEX_2;
 
   /* screen[3] For TVOC*/
   screen[3].cur_icon = (uint8_t*)icon_tvoc;
-  screen[3].sensor.tvoc_val= g_voc_old;
+  screen[3].sensor.tvoc_val= g_voc;
   screen[3].cur_index = INDEX_3;
 
   /* screen[4] For PM25*/
   screen[4].cur_icon = (uint8_t*)icon_pm25;
-  screen[4].sensor.pm25_val = g_pm25_old;
+  screen[4].sensor.pm25_val = g_pm25;
   screen[4].cur_index = INDEX_4;
 }
 

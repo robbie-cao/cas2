@@ -7,7 +7,9 @@
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
-extern uint16_t g_pm25_old, g_pm10_old;
+// Store the correct data reading from sensor
+// and use it if there's error when reading next data from sensor
+static uint16_t s_pm25_old = 50, s_pm10_old = 50;
 
 uint8_t PM25_EnableAutoSend(void)
 {
@@ -117,24 +119,24 @@ uint8_t PM25_Read(uint16_t *pm25, uint16_t *pm10)
     }
   }
   if (!(rcv[i] == 0x40 && rcv[i + 1] == 0x05 && rcv[i + 2] == 0x04)) {
-    *pm25 = g_pm25_old;
-    *pm10 = g_pm10_old;
+    *pm25 = s_pm25_old;
+    *pm10 = s_pm10_old;
     return ERROR;
   }
 
   // checksum
   cs = (65536 - rcv[i] - rcv[i + 1] - rcv[i + 2] - rcv[i + 3] - rcv[i + 4] - rcv[i + 5] - rcv[i + 6]) % 256;
   if (rcv[i+7] == 0 || cs != rcv[i+7]) {
-    *pm25 = g_pm25_old;
-    *pm10 = g_pm10_old;
+    *pm25 = s_pm25_old;
+    *pm10 = s_pm10_old;
     return ERROR;
   }
 
   *pm25 = (rcv[i + 3] << 8) | rcv[i + 4];
   *pm10 = (rcv[i + 5] << 8) | rcv[i + 6];
 
-  g_pm25_old = *pm25;
-  g_pm10_old = *pm10;
+  s_pm25_old = *pm25;
+  s_pm10_old = *pm10;
 
   return SUCCESS;
 }

@@ -7,7 +7,9 @@
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
-extern uint16_t g_co2_old;
+// Store the correct data reading from sensor
+// and use it if there's error when reading next data from sensor
+static uint16_t s_co2_old = 500;
 
 uint8_t S8_Read(uint16_t *c)
 {
@@ -27,9 +29,9 @@ uint8_t S8_Read(uint16_t *c)
     uint16_t co2 = rcv[3] << 8 | rcv[4];
     printf("CO2: %d\r\n", co2);
     *c = co2;
-    g_co2_old = *c;
+    s_co2_old = *c;
   } else {
-    *c = g_co2_old;
+    *c = s_co2_old;
     return ERROR;
   }
 
