@@ -1,4 +1,5 @@
 #include <string.h>
+#include <math.h>
 #include "i2c.h"
 #include "hih6130.h"
 
@@ -64,10 +65,12 @@ ErrorStatus HIH6130_ReadHumiTemp(uint16_t* pDataH, uint16_t* pDataT)
 void Get_HumiTemp(float* rh, float* tc)
 {
   uint16_t humi, temp;
+  float rt = 0.0;
 
   if (HIH6130_ReadHumiTemp(&humi, &temp)) {
+    rt = round((temp * 1.007e-2 - 40.0) * 10.0) / 10.0;     // -> xx.x
     *rh = (float)humi * 6.10e-3;
-    *tc = (float)temp * 1.007e-2 - 40.0;
+    *tc = (float)rt;
     g_hum_old = *rh;
     g_temp_old = *tc;
   } else {
