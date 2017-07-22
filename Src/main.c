@@ -78,6 +78,19 @@ enum screen_update_mode
 };
 
 
+// Assign default value for all sensors for the first time use not to be empty
+SensorData_t sensor_data_latest = {
+  25.0,         // temperature
+  70.0,         // humidity
+  500,          // co2
+  122,          // tvoc
+  501,          // co2eq
+  50,           // pm25
+  50            // pm10
+};
+SensorData_t sensor_data_old;
+SensorData_t sensor_data_display;
+
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -114,9 +127,6 @@ uint8_t rcv_tim_delay;
 uint8_t comm_rcv_flag;
 
 uint8_t auto_switch_flag = 0;
-
-float g_humidity = 70.0, g_temperature = 25.0;
-uint16_t g_co2 = 500, g_voc = 123, g_pm25 = 50, g_pm10 = 50;
 
 float g_hum_prev = 70.0, g_temp_prev = 25.0;
 uint16_t g_co2_prev = 500;
@@ -186,27 +196,27 @@ void Screen_Init(void)
 {
   /* screen[0] for Temperature */
   screen[0].cur_icon = (uint8_t*)icon_temp;
-  screen[0].sensor.temp_val = g_temperature;
+  screen[0].sensor.temp_val = sensor_data_latest.temperature;
   screen[0].cur_index = INDEX_0;
 
   /* screen[1] For Humidity */
   screen[1].cur_icon = (uint8_t*)icon_hum;
-  screen[1].sensor.humd_val = (uint16_t) g_humidity;
+  screen[1].sensor.humd_val = (uint16_t) sensor_data_latest.humidity;
   screen[1].cur_index = INDEX_1;
 
   /* screen[2] For CO2*/
   screen[2].cur_icon = (uint8_t*)icon_co2;
-  screen[2].sensor.co2_val = g_co2;
+  screen[2].sensor.co2_val = sensor_data_latest.co2;
   screen[2].cur_index = INDEX_2;
 
   /* screen[3] For TVOC*/
   screen[3].cur_icon = (uint8_t*)icon_tvoc;
-  screen[3].sensor.tvoc_val= g_voc;
+  screen[3].sensor.tvoc_val= sensor_data_latest.tvoc;
   screen[3].cur_index = INDEX_3;
 
   /* screen[4] For PM25*/
   screen[4].cur_icon = (uint8_t*)icon_pm25;
-  screen[4].sensor.pm25_val = g_pm25;
+  screen[4].sensor.pm25_val = sensor_data_latest.pm25;
   screen[4].cur_index = INDEX_4;
 }
 
@@ -746,15 +756,15 @@ void SensorTask(void const * argument)
     PM25_Read(&pm25, &pm10);
 
     xSemaphoreTake(xSensorDataMutex, portMAX_DELAY);
-    g_temperature = t;
-    g_humidity = h;
-    g_voc = voc;
-    g_co2 = co2;
-    g_pm25 = pm25;
+    sensor_data_latest.temperature = t;
+    sensor_data_latest.humidity = h;
+    sensor_data_latest.tvoc = voc;
+    sensor_data_latest.co2 = co2;
+    sensor_data_latest.pm25 = pm25;
     xSemaphoreGive(xSensorDataMutex);
 
-    printf("T: %.1f, H: %.1f, V: %d\r\n", g_temperature, g_humidity, g_voc);
-    printf("CO2: %d, PM25: %d\r\n", g_co2, g_pm25);
+    printf("T: %.1f, H: %.1f, V: %d\r\n", sensor_data_latest.temperature, sensor_data_latest.humidity, sensor_data_latest.tvoc);
+    printf("CO2: %d, PM25: %d\r\n", sensor_data_latest.co2, sensor_data_latest.pm25);
 
     LED_LEFT_TOGGLE();
     LED_CENTER_TOGGLE();
@@ -770,19 +780,19 @@ uint8_t SensorDataChange(void)
 
   switch (sensor_current) {
   case 0:
-    changed = (g_temperature != g_temp_prev);
+    changed = (sensor_data_latest.temperature != g_temp_prev);
     break;
   case 1:
-    changed = ((uint16_t)g_humidity != (uint16_t)g_hum_prev);
+    changed = ((uint16_t)sensor_data_latest.humidity != (uint16_t)g_hum_prev);
     break;
   case 2:
-    changed = (g_co2 != g_co2_prev);
+    changed = (sensor_data_latest.co2 != g_co2_prev);
     break;
   case 3:
-    changed = (g_voc != g_voc_prev);
+    changed = (sensor_data_latest.tvoc != g_voc_prev);
     break;
   case 4:
-    changed = (g_pm25 != g_pm25_prev);
+    changed = (sensor_data_latest.pm25 != g_pm25_prev);
     break;
   default:
     break;
@@ -803,11 +813,11 @@ void DisplayByIndex(uint8_t mode)
   uint16_t temp, co2, voc, pm25, pm10;
 
   xSemaphoreTake(xSensorDataMutex, portMAX_DELAY);
-  t = g_temperature;
-  h = g_humidity;
-  voc = g_voc;
-  co2 = g_co2;
-  pm25 = g_pm25;
+  t = sensor_data_latest.temperature;
+  h = sensor_data_latest.humidity;
+  voc = sensor_data_latest.tvoc;
+  co2 = sensor_data_latest.co2;
+  pm25 = sensor_data_latest.pm25;
   xSemaphoreGive(xSensorDataMutex);
 
   POINT_COLOR = WHITE;

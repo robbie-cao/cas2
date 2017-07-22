@@ -49,6 +49,7 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 /* Includes ------------------------------------------------------------------*/
+#include <stdint.h>
 
 /* USER CODE BEGIN Includes */
 #include "config.h"
@@ -58,6 +59,23 @@
 /* Private define ------------------------------------------------------------*/
 
 /* USER CODE BEGIN Private defines */
+typedef struct SensorData {
+  /* H/T from HIH6130 */
+  float temperature;            // unit: C or F
+  float humidity;               // unit: %
+  /* CO2 from Sensair S8 */
+  uint16_t co2;                 // unit: ppm
+  /* TVOC from iAQ-Core */
+  uint16_t tvoc;                // unit: ppb
+  uint16_t co2eq;               // unit: ppm, CO2 equivalents, NOT USED
+  /* PM25/10 from Honeywell HPM Series Particle Sensor */
+  uint16_t pm25;                // unit: ug/m3
+  uint16_t pm10;                // unit: ug/m3
+} SensorData_t;
+
+extern SensorData_t sensor_data_latest;
+extern SensorData_t sensor_data_old;
+extern SensorData_t sensor_data_display;
 
 /* USER CODE END Private defines */
 

@@ -30,10 +30,6 @@ extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
 
 
-extern float g_humidity, g_temperature;
-extern uint16_t g_co2, g_voc, g_pm25;
-
-
 uint8_t To_ASCII_ver2(int16_t data, uint8_t* string)
 {
   uint8_t i;
@@ -263,7 +259,7 @@ uint8_t Get_ID(uint8_t* buf)
 
 uint8_t Get_RH(uint8_t* buf)
 {
-  uint16_t temp = (uint16_t)(g_humidity * 10);
+  uint16_t temp = (uint16_t)(sensor_data_latest.humidity * 10);
 
   buf[0] = '"';
   buf[1] = 'H';
@@ -284,16 +280,16 @@ uint8_t Get_TP(uint8_t* buf)
   uint8_t i;
   uint16_t temp;
 
-  if(g_temperature < 0)
+  if(sensor_data_latest.temperature < 0)
   {
     buf[4] = '-';
     i = 5;
-    temp = (uint16_t)(-g_temperature*10);
+    temp = (uint16_t)(-sensor_data_latest.temperature*10);
   }
   else
   {
     i = 4;
-    temp = (uint16_t)(g_temperature*10);
+    temp = (uint16_t)(sensor_data_latest.temperature*10);
   }
   buf[0] = '"';
   buf[1] = 'T';
@@ -317,14 +313,14 @@ uint8_t Get_TVOC(uint8_t* buf)
   buf[1] = 'V';
   buf[2] = '"';
   buf[3] = ':';
-  if( -1 == g_voc )
+  if( -1 == sensor_data_latest.tvoc )
   {
     buf[4] = '-';
     buf[5] = '1';
     buf[6] = ',';
     return 7;
   }
-  i = To_ASCII_ver2((int16_t)g_voc, &buf[4]);
+  i = To_ASCII_ver2((int16_t)sensor_data_latest.tvoc, &buf[4]);
   buf[i+4] = ',';
   return (i+5);
 }
@@ -338,7 +334,7 @@ uint8_t Get_CO2T(uint8_t* buf)
   buf[1] = 'C';
   buf[2] = '"';
   buf[3] = ':';
-  i = To_ASCII_ver2((int16_t)g_co2, &buf[4]);
+  i = To_ASCII_ver2((int16_t)sensor_data_latest.co2, &buf[4]);
   buf[i+4] = ',';
   return (i+5);
 }
@@ -352,14 +348,14 @@ uint8_t Get_PM25_P(uint8_t* buf)
   buf[1] = 'P';
   buf[2] = '"';
   buf[3] = ':';
-  if( -1 == g_pm25 )
+  if( -1 == sensor_data_latest.pm25 )
   {
     buf[4] = '-';
     buf[5] = '1';
     buf[6] = ' ';
     return 7;
   }
-  i = To_ASCII_ver2((int16_t)g_pm25, &buf[4]);
+  i = To_ASCII_ver2((int16_t)sensor_data_latest.pm25, &buf[4]);
   buf[i+4] = ',';
   return (i+5);
 }
