@@ -99,6 +99,9 @@ enum slide_index
 #define DIGIT_WIDTH       96
 #define DIGIT_HEIGHT     192
 
+#define DIGIT_WIDTH2      112
+#define DIGIT_HEIGHT2     144
+
 #define LOGO_XPOS        30
 #define LOGO_YPOS       124
 #define LOGO_WIDTH      420
