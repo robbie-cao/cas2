@@ -578,13 +578,15 @@ void LCD_ShowDigit(u16 x,u16 y,u8 num,u16 size,u8 mode)
 
 void LCD_ShowDigit2(u16 x,u16 y,u8 num,u16 size,u8 mode)
 {
-  // height: 144, widith: 112
+  // bold: height: 144, widith: 112
+  // book: height: 144, widith: 108
+  // light: height: 144, widith: 106
         u16 temp,t1,t;
 	u16 y0=y;
 	u16 csize;
 
         if (size == 144) {
-        csize =(size/8+((size%8)?1:0))*112;		//得到字体一个字符对应点阵集所占的字节数
+        csize =(size/8+((size%8)?1:0))*106;		//得到字体一个字符对应点阵集所占的字节数
         } else {
         csize =(size/8+((size%8)?1:0))*(size/2);		//得到字体一个字符对应点阵集所占的字节数
         }
@@ -593,7 +595,7 @@ void LCD_ShowDigit2(u16 x,u16 y,u8 num,u16 size,u8 mode)
 
 	for(t=0;t<csize;t++)
 	{
-	       temp=honeydigit2[num][t];
+	       temp=honeydigit144_light[num][t];
 
 		for(t1=0;t1<8;t1++)
 		{
