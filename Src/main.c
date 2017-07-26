@@ -55,6 +55,7 @@
 #include "cmsis_os.h"
 
 #include "lcd.h"
+#include "lcd_font.h"
 #include "logo.h"
 #include "icon.h"
 
@@ -337,6 +338,31 @@ int main(void)
   HAL_Delay(10);
   PM25_StartMeasurement();
   HAL_Delay(100);
+
+  while (0) {
+    LCD_Clear(BLACK);
+    LCD_ShowNumCenterAlign(0, &font_honey_light, WHITE);
+    HAL_Delay(1000);
+    LCD_Clear(BLACK);
+    LCD_ShowNumCenterAlign(12, &font_honey_light, WHITE);
+    HAL_Delay(1000);
+    LCD_Clear(BLACK);
+    LCD_ShowNumCenterAlign(345, &font_honey_light, WHITE);
+    HAL_Delay(1000);
+    LCD_Clear(BLACK);
+    LCD_ShowNumCenterAlign(6789, &font_honey_light, WHITE);
+    HAL_Delay(1000);
+    LCD_Clear(BLACK);
+    LCD_ShowDotNumCenterAlign(0.12, &font_honey_light, WHITE);
+    HAL_Delay(1000);
+    LCD_Clear(BLACK);
+    LCD_ShowDotNumCenterAlign(23.4, &font_honey_light, WHITE);
+    HAL_Delay(1000);
+    LCD_Clear(BLACK);
+    LCD_ShowDotNumCenterAlign(567.89, &font_honey_light, WHITE);
+    HAL_Delay(1000);
+//    LCD_Test();
+  }
 
   /*##-2- Start the TIM Base generation in interrupt mode ####################*/
   /* Start Channel1 */

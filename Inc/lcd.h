@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "stm32f4xx_hal.h"
+#include "lcd_font.h"
 
 
 /* Pin definitions */
@@ -197,6 +198,9 @@ void LCD_MaskImage(uint16_t Xpos, uint16_t Ypos, uint16_t width, uint16_t height
 void LCD_ShowSlide(uint8_t index);
 void LCD_ShowDot(void);
 void LCD_ShowDigtStr(u8 *p, uint8_t dot_flag, uint8_t bit_width);
+
+void LCD_ShowNumCenterAlign(uint16_t num, Font_t *font, uint16_t color);
+void LCD_ShowDotNumCenterAlign(float num, Font_t *font, uint16_t color);
 
 #endif
 

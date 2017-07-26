@@ -999,6 +999,9 @@
         <name>$PROJ_DIR$\..\Src\lcd.c</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\..\Src\lcd_font.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\Src\main.c</name>
       </file>
       <file>
