@@ -13,6 +13,9 @@ u32 BACK_COLOR =0xFFFFFFFF;  	//背景色
 
 _lcd_dev lcddev;
 
+u32 LCD_Pow(u8 m,u8 n);
+
+
 void LCD_Delay(volatile unsigned int delay) {
 	for (; delay != 0; delay--);
 }
@@ -545,6 +548,127 @@ void LCD_ShowChar(u16 x,u16 y,u8 num,u8 size,u8 mode)
 		}
 	}
 }
+
+void LCD_ShowHonDigit(u16 x, u16 y, u8 num, Font_t *font, uint16_t color)
+{
+  u16 temp, t1, t;
+  u16 y0 = y;
+  u16 csize= (font->height / 8 + ((font->height % 8) ? 1 : 0)) * (font->width);		//得到字体一个字符对应点阵集所占的字节数
+
+  num = num - 0x30;
+
+  // LCD_Fill(x, y, x + font->width - 1, y + font->height - 1, BLACK);
+  for (t = 0; t < csize; t++)
+  {
+    temp = font->data[csize * num + t];
+
+    for (t1 = 0; t1 < 8; t1++)
+    {
+      if (temp & 0x80) {
+        LCD_Fast_DrawPoint(x, y, color);
+      }
+      temp <<= 1;
+      y++;
+      if (y >= lcddev.height) {
+        return;		//超区域了
+      }
+      if ((y - y0) == font->height)
+      {
+        y = y0;
+        x++;
+        if (x >= lcddev.width) {
+          return;	//超区域了
+        }
+        break;
+      }
+    }
+  }
+}
+
+
+void LCD_ShowNumCenterAlign(uint16_t num, Font_t *font, uint16_t color)
+{
+  uint16_t temp = num;
+  uint8_t len = 0;
+  uint8_t t;
+
+  uint16_t cur_xpos, cur_ypos;
+
+  do {
+    len += 1;
+    temp /= 10;
+  } while (temp);
+
+  cur_xpos = (lcddev.width - font->width * len) / 2;
+  cur_ypos = DIGIT_YPOS;
+
+  for (t = 0; t < len; t++)
+  {
+    temp = (num / LCD_Pow(10, len - t - 1)) % 10;
+    LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
+    cur_xpos += font->width;
+  }
+}
+
+void LCD_ShowDotNumCenterAlign(float num, Font_t *font, uint16_t color)
+{
+  uint16_t num1 = (uint16_t)num;
+  uint16_t num2 = (uint16_t)((num - num1) * 10);
+  uint16_t temp = num;
+  uint8_t len = 0;
+  uint8_t t;
+
+  uint16_t cur_xpos, cur_ypos;
+
+  do {
+    len += 1;
+    temp /= 10;
+  } while (temp);
+
+  cur_xpos = (lcddev.width - font->width * (len + 1) - ICON_DOT_WIDTH) / 2;
+  cur_ypos = DIGIT_YPOS;
+
+  for (t = 0; t < len; t++)
+  {
+    temp = (num1 / LCD_Pow(10, len - t - 1)) % 10;
+    LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
+    cur_xpos += font->width;
+  }
+
+  uint8_t* cur_icon = (uint8_t *)icon_dot;
+  LCD_ShowImage(cur_xpos, DIGIT_YPOS + font->height - ICON_DOT_HEIGHT, ICON_DOT_WIDTH, ICON_DOT_HEIGHT, cur_icon);
+
+  cur_xpos += ICON_DOT_WIDTH;
+  temp = num2;
+  LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
+}
+
+void LCD_Test(void)
+{
+  LCD_Clear(BLACK);
+  LCD_ShowNumCenterAlign(0, &font_honey_light, WHITE);
+  HAL_Delay(1000);
+  LCD_Clear(BLACK);
+  LCD_ShowNumCenterAlign(12, &font_honey_light, WHITE);
+  HAL_Delay(1000);
+  LCD_Clear(BLACK);
+  LCD_ShowNumCenterAlign(345, &font_honey_light, WHITE);
+  HAL_Delay(1000);
+  LCD_Clear(BLACK);
+  LCD_ShowNumCenterAlign(6789, &font_honey_light, WHITE);
+  HAL_Delay(1000);
+  LCD_Clear(BLACK);
+  LCD_ShowDotNumCenterAlign(0.12, &font_honey_light, WHITE);
+  HAL_Delay(1000);
+  LCD_Clear(BLACK);
+  LCD_ShowDotNumCenterAlign(23.4, &font_honey_light, WHITE);
+  HAL_Delay(1000);
+  LCD_Clear(BLACK);
+  LCD_ShowDotNumCenterAlign(567.89, &font_honey_light, WHITE);
+  HAL_Delay(1000);
+}
+
+
 void LCD_ShowDigit(u16 x,u16 y,u8 num,u16 size,u8 mode)
 {
         u16 temp,t1,t;

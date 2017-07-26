@@ -7893,4 +7893,19 @@ const unsigned char honeydigit144_light[10][1908] =
 };
 
 
+
+typedef struct {
+	uint8_t width;    /*!< Font width in pixels */
+	uint8_t height;   /*!< Font height in pixels */
+	const unsigned char *data; /*!< Pointer to data font data array */
+} Font_t;
+
+
+Font_t font_honey_light = {
+	106,
+	144,
+	(unsigned char *)honeydigit144_light
+};
+
+
 #endif
