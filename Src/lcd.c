@@ -743,6 +743,75 @@ void LCD_ShowDotNumCenterAlign(float num, Font_t *font, uint16_t color)
   LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
 }
 
+void LCD_UpdateDotNumPartialCenterAlign(float num, float num_old, Font_t *font, uint16_t color)
+{
+  uint16_t num1 = (uint16_t)num;
+  uint16_t num2 = (uint16_t)((num - num1) * 10);
+  uint16_t num1_old = (uint16_t)num_old;
+  uint16_t num2_old = (uint16_t)((num_old - num1_old) * 10);
+  uint16_t temp = num;
+  uint16_t temp2;
+  uint8_t len = 0;
+  uint8_t len_old = 0;
+  uint8_t t;
+
+  uint16_t cur_xpos, cur_ypos;
+  uint16_t xpos_old, ypos_old;
+
+
+  len = LCD_NumLen(num1);
+  len_old = LCD_NumLen(num1_old);
+
+  if (len != len_old) {
+
+    xpos_old = (lcddev.width - font->width * (len_old + 1) - ICON_DOT_WIDTH) / 2;
+    ypos_old = DIGIT_YPOS;
+    // Clear previous
+    LCD_Fill(xpos_old, ypos_old, xpos_old + font->width * (len_old + 1) + ICON_DOT_WIDTH - 1, ypos_old + font->height - 1, BLACK);
+
+    cur_xpos = (lcddev.width - font->width * (len + 1) - ICON_DOT_WIDTH) / 2;
+    cur_ypos = DIGIT_YPOS;
+
+    for (t = 0; t < len; t++)
+    {
+      temp = (num1 / LCD_Pow(10, len - t - 1)) % 10;
+      LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
+      cur_xpos += font->width;
+    }
+
+    uint8_t* cur_icon = (uint8_t *)icon_dot;
+    LCD_ShowImage(cur_xpos, DIGIT_YPOS + font->height - ICON_DOT_HEIGHT, ICON_DOT_WIDTH, ICON_DOT_HEIGHT, cur_icon);
+
+    cur_xpos += ICON_DOT_WIDTH;
+    temp = num2;
+    LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
+  } else {
+    cur_xpos = (lcddev.width - font->width * (len + 1) - ICON_DOT_WIDTH) / 2;
+    cur_ypos = DIGIT_YPOS;
+
+    for (t = 0; t < len; t++)
+    {
+
+      temp = (num1 / LCD_Pow(10, len - t - 1)) % 10;
+      temp2 = (num1_old / LCD_Pow(10, len - t - 1)) % 10;
+
+      if (temp != temp2) {
+        LCD_Fill(cur_xpos, cur_ypos, cur_xpos + font->width - 1, cur_ypos + font->height - 1, BLACK);
+        LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
+      }
+      cur_xpos += font->width;
+    }
+
+    cur_xpos += ICON_DOT_WIDTH;
+    temp = num2;
+    temp2 = num2_old;
+    if (temp != temp2) {
+      LCD_Fill(cur_xpos, cur_ypos, cur_xpos + font->width - 1, cur_ypos + font->height - 1, BLACK);
+      LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
+    }
+  }
+}
+
 void LCD_Test(void)
 {
   LCD_Clear(BLACK);

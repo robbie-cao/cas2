@@ -201,6 +201,8 @@ void LCD_ShowDigtStr(u8 *p, uint8_t dot_flag, uint8_t bit_width);
 
 void LCD_ShowNumCenterAlign(uint16_t num, Font_t *font, uint16_t color);
 void LCD_ShowDotNumCenterAlign(float num, Font_t *font, uint16_t color);
+void LCD_UpdateNumPartialCenterAlign(uint16_t num, uint16_t num_old, Font_t *font, uint16_t color);
+void LCD_UpdateDotNumPartialCenterAlign(float num, float num_old, Font_t *font, uint16_t color);
 
 #endif
 

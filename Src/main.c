@@ -339,6 +339,22 @@ int main(void)
   PM25_StartMeasurement();
   HAL_Delay(100);
 
+  while (0) {
+    LCD_Clear(BLACK);
+    LCD_ShowNumCenterAlign(1234, &font_honey_light, WHITE);
+    HAL_Delay(1000);
+    LCD_UpdateNumPartialCenterAlign(1235, 1234, &font_honey_light, WHITE);
+    HAL_Delay(1000);
+    LCD_UpdateNumPartialCenterAlign(1338, 1235, &font_honey_light, WHITE);
+    HAL_Delay(1000);
+    LCD_UpdateNumPartialCenterAlign(5031, 1338, &font_honey_light, WHITE);
+    HAL_Delay(1000);
+    LCD_UpdateNumPartialCenterAlign(31, 5031, &font_honey_light, WHITE);
+    HAL_Delay(1000);
+    LCD_UpdateNumPartialCenterAlign(299, 31, &font_honey_light, WHITE);
+    HAL_Delay(1000);
+  }
+
   /*##-2- Start the TIM Base generation in interrupt mode ####################*/
   /* Start Channel1 */
 #if 0
@@ -940,6 +956,89 @@ void UpdateDisplay(uint8_t mode, uint8_t index_curr, uint8_t index_next)
   }
 }
 
+void UpdateSensorDataDisplay(uint8_t index_next)
+{
+  uint16_t color = WHITE;
+
+  switch (index_next) {
+  case 0:
+    if (display.data_to_display.temperature < 0 ) //Negative value
+    {
+      LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
+    }
+    LCD_ShowDotNumCenterAlign(display.data_to_display.temperature, &font_honey_light, color);
+    break;
+  case 1:
+    LCD_ShowNumCenterAlign((uint16_t)display.data_to_display.humidity, &font_honey_light, color);
+    break;
+  case 2:
+    if (display.data_to_display.co2 > CO2_THRESHOLD) {
+      color = RED;
+    }
+    LCD_ShowNumCenterAlign(display.data_to_display.co2, &font_honey_light, color);
+    break;
+  case 3:
+    if (display.data_to_display.tvoc > TVOC_THRESHOLD) {
+      color = RED;
+    }
+    LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &font_honey_light, color);
+    break;
+  case 4:
+    if (display.data_to_display.pm25 > PM25_THRESHOLD) {
+      color = RED;
+    }
+    LCD_ShowNumCenterAlign(display.data_to_display.pm25, &font_honey_light, color);
+    break;
+
+  default:
+    break;
+  }
+}
+
+void UpdateSensorDataDisplayPartial(uint8_t index_next)
+{
+  uint16_t color = WHITE;
+
+  switch (index_next) {
+  case 0:
+    LCD_UpdateDotNumPartialCenterAlign(display.data_to_display.temperature, display.data_on_screen.temperature, &font_honey_light, color);
+    break;
+  case 1:
+    LCD_UpdateNumPartialCenterAlign((uint16_t)display.data_to_display.humidity, (uint16_t)display.data_on_screen.humidity, &font_honey_light, color);
+    break;
+  case 2:
+    if (display.data_to_display.co2 > CO2_THRESHOLD) {
+      color = RED;
+      LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+      LCD_ShowNumCenterAlign(display.data_to_display.co2, &font_honey_light, color);
+    } else {
+      LCD_UpdateNumPartialCenterAlign(display.data_to_display.co2, display.data_on_screen.co2, &font_honey_light, color);
+    }
+    break;
+  case 3:
+    if (display.data_to_display.tvoc > TVOC_THRESHOLD) {
+      color = RED;
+      LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+      LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &font_honey_light, color);
+    } else {
+      LCD_UpdateNumPartialCenterAlign(display.data_to_display.tvoc, display.data_on_screen.tvoc, &font_honey_light, color);
+    }
+    break;
+  case 4:
+    if (display.data_to_display.pm25 > PM25_THRESHOLD) {
+      color = RED;
+      LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+      LCD_ShowNumCenterAlign(display.data_to_display.pm25, &font_honey_light, color);
+    } else {
+      LCD_UpdateNumPartialCenterAlign(display.data_to_display.pm25, display.data_on_screen.pm25, &font_honey_light, color);
+    }
+    break;
+
+  default:
+    break;
+  }
+}
+
 void UpdateDisplay2(uint8_t mode, uint8_t index_curr, uint8_t index_next)
 {
   uint16_t color = WHITE;
@@ -999,6 +1098,31 @@ void UpdateDisplay2(uint8_t mode, uint8_t index_curr, uint8_t index_next)
   }
 }
 
+void UpdateDisplay3(uint8_t mode, uint8_t index_curr, uint8_t index_next)
+{
+  uint16_t color = WHITE;
+
+  POINT_COLOR = WHITE;
+  if (mode == SCROLL_MODE || index_curr != index_next) {
+    // SCROLL mode or FIXED mode for the first time
+    // Clear whole screen and redraw icon and bottom slides
+
+    //LCD_Scroll_On(LEFT);
+    LCD_Clear(BLACK);
+
+    //LCD_MaskImage(0,0,480,320, BLACK);
+
+    LCD_ShowImage(ICON_SENSOR_XPOS, ICON_SENSOR_YPOS,
+                  ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[index_next].cur_icon);
+    LCD_ShowSlide(screen[index_next].cur_index);
+    UpdateSensorDataDisplay(index_next);
+  } else {
+    // FIXED mode
+    // Only redraw data, not redraw icon and bottom slides
+    UpdateSensorDataDisplayPartial(index_next);
+  }
+}
+
 
 void DisplayTask(void const * argument)
 {
@@ -1025,7 +1149,7 @@ void DisplayTask(void const * argument)
       // Stay at one sensor and update data if changed
       UpdateDataToDisplay();
       if (DisplayDataChanged()) {
-        UpdateDisplay2(display_mode, screen_index_curr, screen_index_next);
+        UpdateDisplay3(display_mode, screen_index_curr, screen_index_next);
         UpdateDataOnScreen();
       }
       vTaskDelay(50);
