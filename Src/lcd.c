@@ -549,6 +549,18 @@ void LCD_ShowChar(u16 x,u16 y,u8 num,u8 size,u8 mode)
 	}
 }
 
+uint8_t LCD_NumLen(uint16_t num)
+{
+  uint8_t len = 0;
+
+  do {
+    len += 1;
+    num /= 10;
+  } while (num);
+
+  return len;
+}
+
 void LCD_ShowHonDigit(u16 x, u16 y, u8 num, Font_t *font, uint16_t color)
 {
   u16 temp, t1, t;
@@ -566,6 +578,44 @@ void LCD_ShowHonDigit(u16 x, u16 y, u8 num, Font_t *font, uint16_t color)
     {
       if (temp & 0x80) {
         LCD_Fast_DrawPoint(x, y, color);
+      }
+      temp <<= 1;
+      y++;
+      if (y >= lcddev.height) {
+        return;		//超区域了
+      }
+      if ((y - y0) == font->height)
+      {
+        y = y0;
+        x++;
+        if (x >= lcddev.width) {
+          return;	//超区域了
+        }
+        break;
+      }
+    }
+  }
+}
+
+void LCD_ShowHonDigit2(u16 x, u16 y, u8 num, Font_t *font, uint16_t color, uint16_t bg_color)
+{
+  u16 temp, t1, t;
+  u16 y0 = y;
+  u16 csize= (font->height / 8 + ((font->height % 8) ? 1 : 0)) * (font->width);		//得到字体一个字符对应点阵集所占的字节数
+
+  num = num - 0x30;
+
+  // LCD_Fill(x, y, x + font->width - 1, y + font->height - 1, BLACK);
+  for (t = 0; t < csize; t++)
+  {
+    temp = font->data[csize * num + t];
+
+    for (t1 = 0; t1 < 8; t1++)
+    {
+      if (temp & 0x80) {
+        LCD_Fast_DrawPoint(x, y, color);
+      } else {
+        LCD_Fast_DrawPoint(x, y, bg_color);
       }
       temp <<= 1;
       y++;
@@ -610,11 +660,61 @@ void LCD_ShowNumCenterAlign(uint16_t num, Font_t *font, uint16_t color)
   }
 }
 
+void LCD_UpdateNumPartialCenterAlign(uint16_t num, uint16_t num_old, Font_t *font, uint16_t color)
+{
+  uint16_t temp = num;
+  uint8_t len = 0;
+  uint8_t len_old = 0;
+  uint8_t t;
+
+  uint16_t cur_xpos, cur_ypos;
+  uint16_t xpos_old, ypos_old;
+
+
+  len = LCD_NumLen(num);
+  len_old = LCD_NumLen(num_old);
+
+  if (len != len_old) {
+
+    xpos_old = (lcddev.width - font->width * len_old) / 2;
+    ypos_old = DIGIT_YPOS;
+
+    // Clear previous
+    LCD_Fill(xpos_old, ypos_old, xpos_old + font->width * len_old - 1, ypos_old + font->height - 1, BLACK);
+    cur_xpos = (lcddev.width - font->width * len) / 2;
+    cur_ypos = DIGIT_YPOS;
+
+    for (t = 0; t < len; t++)
+    {
+      temp = (num / LCD_Pow(10, len - t - 1)) % 10;
+      LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
+      cur_xpos += font->width;
+    }
+  } else {
+    cur_xpos = (lcddev.width - font->width * len) / 2;
+    cur_ypos = DIGIT_YPOS;
+
+    for (t = 0; t < len; t++)
+    {
+      uint16_t temp2;
+
+      temp = (num / LCD_Pow(10, len - t - 1)) % 10;
+      temp2 = (num_old / LCD_Pow(10, len - t - 1)) % 10;
+
+      if (temp != temp2) {
+        LCD_Fill(cur_xpos, cur_ypos, cur_xpos + font->width - 1, cur_ypos + font->height - 1, BLACK);
+        LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
+      }
+      cur_xpos += font->width;
+    }
+  }
+}
+
 void LCD_ShowDotNumCenterAlign(float num, Font_t *font, uint16_t color)
 {
   uint16_t num1 = (uint16_t)num;
   uint16_t num2 = (uint16_t)((num - num1) * 10);
-  uint16_t temp = num;
+  uint16_t temp = (uint16_t)num;
   uint8_t len = 0;
   uint8_t t;
 
