@@ -913,17 +913,17 @@ void UpdateDisplay(uint8_t mode, uint8_t index_curr, uint8_t index_next)
     } else if (index_next == 2) {
       myval = display.data_to_display.co2;
       if (myval > CO2_THRESHOLD) {
-        POINT_COLOR = RED;
+        POINT_COLOR = HON_RED;
       }
     } else if (index_next == 3) {
       myval = display.data_to_display.tvoc;
       if (myval > TVOC_THRESHOLD) {
-        POINT_COLOR = RED;
+        POINT_COLOR = HON_RED;
       }
     } else if (index_next == 4) {
       myval = display.data_to_display.pm25;
       if (myval > PM25_THRESHOLD) {
-        POINT_COLOR = RED;
+        POINT_COLOR = HON_RED;
       }
     } else {
       myval = 0;
@@ -973,19 +973,19 @@ void UpdateSensorDataDisplay(uint8_t index_next)
     break;
   case 2:
     if (display.data_to_display.co2 > CO2_THRESHOLD) {
-      color = RED;
+      color = HON_RED;
     }
     LCD_ShowNumCenterAlign(display.data_to_display.co2, &font_honey_light, color);
     break;
   case 3:
     if (display.data_to_display.tvoc > TVOC_THRESHOLD) {
-      color = RED;
+      color = HON_RED;
     }
     LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &font_honey_light, color);
     break;
   case 4:
     if (display.data_to_display.pm25 > PM25_THRESHOLD) {
-      color = RED;
+      color = HON_RED;
     }
     LCD_ShowNumCenterAlign(display.data_to_display.pm25, &font_honey_light, color);
     break;
@@ -1008,7 +1008,7 @@ void UpdateSensorDataDisplayPartial(uint8_t index_next)
     break;
   case 2:
     if (display.data_to_display.co2 > CO2_THRESHOLD) {
-      color = RED;
+      color = HON_RED;
       if (display.data_on_screen.co2 > CO2_THRESHOLD) {
         LCD_UpdateNumPartialCenterAlign(display.data_to_display.co2, display.data_on_screen.co2, &font_honey_light, color);
       } else {
@@ -1026,7 +1026,7 @@ void UpdateSensorDataDisplayPartial(uint8_t index_next)
     break;
   case 3:
     if (display.data_to_display.tvoc > TVOC_THRESHOLD) {
-      color = RED;
+      color = HON_RED;
       if (display.data_on_screen.tvoc > TVOC_THRESHOLD) {
         LCD_UpdateNumPartialCenterAlign(display.data_to_display.tvoc, display.data_on_screen.tvoc, &font_honey_light, color);
       } else {
@@ -1044,7 +1044,7 @@ void UpdateSensorDataDisplayPartial(uint8_t index_next)
     break;
   case 4:
     if (display.data_to_display.pm25 > PM25_THRESHOLD) {
-      color = RED;
+      color = HON_RED;
       if (display.data_on_screen.pm25 > PM25_THRESHOLD) {
         LCD_UpdateNumPartialCenterAlign(display.data_to_display.pm25, display.data_on_screen.pm25, &font_honey_light, color);
       } else {
@@ -1103,19 +1103,19 @@ void UpdateDisplay2(uint8_t mode, uint8_t index_curr, uint8_t index_next)
     break;
   case 2:
     if (display.data_to_display.co2 > CO2_THRESHOLD) {
-      color = RED;
+      color = HON_RED;
     }
     LCD_ShowNumCenterAlign(display.data_to_display.co2, &font_honey_light, color);
     break;
   case 3:
     if (display.data_to_display.tvoc > TVOC_THRESHOLD) {
-      color = RED;
+      color = HON_RED;
     }
     LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &font_honey_light, color);
     break;
   case 4:
     if (display.data_to_display.pm25 > PM25_THRESHOLD) {
-      color = RED;
+      color = HON_RED;
     }
     LCD_ShowNumCenterAlign(display.data_to_display.pm25, &font_honey_light, color);
     break;
