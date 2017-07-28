@@ -140,6 +140,7 @@ typedef struct
 #define GRED          0xFFE0
 #define GBLUE         0x07FF
 #define RED           0xF800
+#define HON_RED       0xE984
 #define MAGENTA       0xF81F
 #define GREEN         0x07E0
 #define CYAN          0x7FFF
