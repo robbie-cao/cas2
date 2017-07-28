@@ -343,15 +343,15 @@ int main(void)
     LCD_Clear(BLACK);
     LCD_ShowNumCenterAlign(1234, &font_honey_light, WHITE);
     HAL_Delay(1000);
-    LCD_UpdateNumPartialCenterAlign(1235, 1234, &font_honey_light, WHITE);
+    LCD_UpdateNumPartialCenterAlign(1235, 1234, &font_honey_light, HON_RED);
     HAL_Delay(1000);
-    LCD_UpdateNumPartialCenterAlign(1338, 1235, &font_honey_light, WHITE);
+    LCD_UpdateNumPartialCenterAlign(1338, 1235, &font_honey_light, HON_RED);
     HAL_Delay(1000);
-    LCD_UpdateNumPartialCenterAlign(5031, 1338, &font_honey_light, WHITE);
+    LCD_UpdateNumPartialCenterAlign(5031, 1338, &font_honey_light, HON_RED);
     HAL_Delay(1000);
-    LCD_UpdateNumPartialCenterAlign(31, 5031, &font_honey_light, WHITE);
+    LCD_UpdateNumPartialCenterAlign(31, 5031, &font_honey_light, HON_RED);
     HAL_Delay(1000);
-    LCD_UpdateNumPartialCenterAlign(299, 31, &font_honey_light, WHITE);
+    LCD_UpdateNumPartialCenterAlign(299, 31, &font_honey_light, HON_RED);
     HAL_Delay(1000);
   }
 
@@ -1009,28 +1009,55 @@ void UpdateSensorDataDisplayPartial(uint8_t index_next)
   case 2:
     if (display.data_to_display.co2 > CO2_THRESHOLD) {
       color = RED;
-      LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
-      LCD_ShowNumCenterAlign(display.data_to_display.co2, &font_honey_light, color);
+      if (display.data_on_screen.co2 > CO2_THRESHOLD) {
+        LCD_UpdateNumPartialCenterAlign(display.data_to_display.co2, display.data_on_screen.co2, &font_honey_light, color);
+      } else {
+        LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+        LCD_ShowNumCenterAlign(display.data_to_display.co2, &font_honey_light, color);
+      }
     } else {
-      LCD_UpdateNumPartialCenterAlign(display.data_to_display.co2, display.data_on_screen.co2, &font_honey_light, color);
+      if (display.data_on_screen.co2 > CO2_THRESHOLD) {
+        LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+        LCD_ShowNumCenterAlign(display.data_to_display.co2, &font_honey_light, color);
+      } else {
+        LCD_UpdateNumPartialCenterAlign(display.data_to_display.co2, display.data_on_screen.co2, &font_honey_light, color);
+      }
     }
     break;
   case 3:
     if (display.data_to_display.tvoc > TVOC_THRESHOLD) {
       color = RED;
-      LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
-      LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &font_honey_light, color);
+      if (display.data_on_screen.tvoc > TVOC_THRESHOLD) {
+        LCD_UpdateNumPartialCenterAlign(display.data_to_display.tvoc, display.data_on_screen.tvoc, &font_honey_light, color);
+      } else {
+        LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+        LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &font_honey_light, color);
+      }
     } else {
-      LCD_UpdateNumPartialCenterAlign(display.data_to_display.tvoc, display.data_on_screen.tvoc, &font_honey_light, color);
+      if (display.data_on_screen.tvoc > TVOC_THRESHOLD) {
+        LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+        LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &font_honey_light, color);
+      } else {
+        LCD_UpdateNumPartialCenterAlign(display.data_to_display.tvoc, display.data_on_screen.tvoc, &font_honey_light, color);
+      }
     }
     break;
   case 4:
     if (display.data_to_display.pm25 > PM25_THRESHOLD) {
       color = RED;
-      LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
-      LCD_ShowNumCenterAlign(display.data_to_display.pm25, &font_honey_light, color);
+      if (display.data_on_screen.pm25 > PM25_THRESHOLD) {
+        LCD_UpdateNumPartialCenterAlign(display.data_to_display.pm25, display.data_on_screen.pm25, &font_honey_light, color);
+      } else {
+        LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+        LCD_ShowNumCenterAlign(display.data_to_display.pm25, &font_honey_light, color);
+      }
     } else {
-      LCD_UpdateNumPartialCenterAlign(display.data_to_display.pm25, display.data_on_screen.pm25, &font_honey_light, color);
+      if (display.data_on_screen.pm25 > PM25_THRESHOLD) {
+        LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+        LCD_ShowNumCenterAlign(display.data_to_display.pm25, &font_honey_light, color);
+      } else {
+        LCD_UpdateNumPartialCenterAlign(display.data_to_display.pm25, display.data_on_screen.pm25, &font_honey_light, color);
+      }
     }
     break;
 
