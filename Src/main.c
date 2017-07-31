@@ -143,6 +143,7 @@ typedef struct LCD_Screen
     uint16_t    pm25_val;
   } sensor;
   uint8_t cur_index;
+  uint8_t cur_symbol;
 } LCD_Screen_t;
 
 typedef struct LCD_Display
@@ -199,26 +200,31 @@ void Screen_Init(void)
 {
   /* screen[0] for Temperature */
   screen[0].cur_icon = (uint8_t*)icon_newtemp;
+  screen[0].cur_symbol = 0;
   screen[0].sensor.temp_val = sensor_data_latest.temperature;
   screen[0].cur_index = INDEX_0;
 
   /* screen[1] For Humidity */
   screen[1].cur_icon = (uint8_t*)icon_newhumd;
+  screen[1].cur_symbol = 0;
   screen[1].sensor.humd_val = (uint16_t) sensor_data_latest.humidity;
   screen[1].cur_index = INDEX_1;
 
   /* screen[2] For CO2*/
   screen[2].cur_icon = (uint8_t*)icon_newco2;
+  screen[2].cur_symbol = 1;
   screen[2].sensor.co2_val = sensor_data_latest.co2;
   screen[2].cur_index = INDEX_2;
 
   /* screen[3] For TVOC*/
   screen[3].cur_icon = (uint8_t*)icon_newtvoc;
+  screen[3].cur_symbol = 1;
   screen[3].sensor.tvoc_val= sensor_data_latest.tvoc;
   screen[3].cur_index = INDEX_3;
 
   /* screen[4] For PM25*/
   screen[4].cur_icon = (uint8_t*)icon_newpm25;
+  screen[4].cur_symbol = 1;
   screen[4].sensor.pm25_val = sensor_data_latest.pm25;
   screen[4].cur_index = INDEX_4;
 
@@ -854,10 +860,13 @@ void UpdateDataToDisplay(void)
   xSemaphoreGive(xSensorDataMutex);
 }
 
-void UpdateDataOnScreen(void)
+void UpdateDataOnScreen(uint8_t cur_index)
 {
   memcpy(&display.data_on_screen, &display.data_to_display, sizeof(SensorData_t));
-  LCD_ShowSymbol(23);
+  if(screen[cur_index].cur_symbol==1)
+  {
+    LCD_ShowSymbol(13);
+  }
 }
 
 
@@ -1181,7 +1190,7 @@ void DisplayTask(void const * argument)
       UpdateDataToDisplay();
       if (DisplayDataChanged()) {
         UpdateDisplay3(display_mode, screen_index_curr, screen_index_next);
-        UpdateDataOnScreen();
+        UpdateDataOnScreen(screen_index_next);
       }
       vTaskDelay(50);
       continue ;
@@ -1190,7 +1199,7 @@ void DisplayTask(void const * argument)
     // Switch sensor and update whole screen
     UpdateDataToDisplay();
     UpdateDisplay2(display_mode, screen_index_curr, screen_index_next);
-    UpdateDataOnScreen();
+    UpdateDataOnScreen(screen_index_next);
 
     xSemaphoreTake(xScreenCtrlMutex, portMAX_DELAY);
     display.index_curr = display.index_next;
