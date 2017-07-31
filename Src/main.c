@@ -808,6 +808,10 @@ void SensorTask(void const * argument)
     t = t * 1.8 + 32;
 #endif
 
+#if TEMPERATURE_NO_DOT
+    t = t + 0.5;
+#endif
+
     xSemaphoreTake(xSensorDataMutex, portMAX_DELAY);
     sensor_data_latest.temperature = t;
     sensor_data_latest.humidity = h;
@@ -842,7 +846,11 @@ uint8_t DisplayDataChanged(void)
 
   switch (screen_index_curr) {
   case 0:
+#if TEMPERATURE_NO_DOT
     changed = (display.data_to_display.temperature != display.data_on_screen.temperature);
+#else
+    changed = ((uint16_t)display.data_to_display.temperature != (uint16_t)display.data_on_screen.temperature);
+#endif
     break;
   case 1:
     changed = ((uint16_t)display.data_to_display.humidity != (uint16_t)display.data_on_screen.humidity);
@@ -1001,7 +1009,11 @@ void UpdateSensorDataDisplay(uint8_t index_next)
     {
       LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
     }
+#if TEMPERATURE_NO_DOT
+    LCD_ShowNumCenterAlign((uint16_t)display.data_to_display.temperature, &font_honey_light, color);
+#else
     LCD_ShowDotNumCenterAlign(display.data_to_display.temperature, &font_honey_light, color);
+#endif
     break;
   case 1:
     LCD_ShowNumCenterAlign((uint16_t)display.data_to_display.humidity, &font_honey_light, color);
@@ -1036,7 +1048,11 @@ void UpdateSensorDataDisplayPartial(uint8_t index_next)
 
   switch (index_next) {
   case 0:
+#if TEMPERATURE_NO_DOT
+    LCD_UpdateNumPartialCenterAlign((uint16_t)display.data_to_display.temperature, (uint16_t)display.data_on_screen.temperature, &font_honey_light, color);
+#else
     LCD_UpdateDotNumPartialCenterAlign(display.data_to_display.temperature, display.data_on_screen.temperature, &font_honey_light, color);
+#endif
     break;
   case 1:
     LCD_UpdateNumPartialCenterAlign((uint16_t)display.data_to_display.humidity, (uint16_t)display.data_on_screen.humidity, &font_honey_light, color);
@@ -1131,7 +1147,11 @@ void UpdateDisplay2(uint8_t mode, uint8_t index_curr, uint8_t index_next)
     {
       LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
     }
+#if TEMPERATURE_NO_DOT
+    LCD_ShowNumCenterAlign((uint16_t)display.data_to_display.temperature, &font_honey_light, color);
+#else
     LCD_ShowDotNumCenterAlign(display.data_to_display.temperature, &font_honey_light, color);
+#endif
     break;
   case 1:
     LCD_ShowNumCenterAlign((uint16_t)display.data_to_display.humidity, &font_honey_light, color);
