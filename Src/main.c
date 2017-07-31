@@ -345,7 +345,7 @@ int main(void)
   HAL_Delay(10);
   PM25_StartMeasurement();
   HAL_Delay(100);
-  
+
   while (0) {
     LCD_Clear(BLACK);
     LCD_ShowNumCenterAlign(1234, &font_honey_light, WHITE);
@@ -771,8 +771,14 @@ void CommTask(void const * argument)
   }
 }
 
+#define STABLE_TIME   (15 * 60)   // 15 minutes
+
 void SensorTask(void const * argument)
 {
+  static uint32_t time_count = 0;
+  static uint8_t init_flag = 0;
+  static float init_temp;
+
   float t, h;
   uint16_t co2, voc, co2eq, pm25, pm10;
 
@@ -784,6 +790,23 @@ void SensorTask(void const * argument)
     S8_Read(&co2);
     Get_VocData(&co2eq, &voc);
     PM25_Read(&pm25, &pm10);
+#if TEMPERATURE_COMPENSATE
+    if (!init_flag) {
+      init_temp = t;
+      init_flag = 1;
+    }
+    if (init_flag) {
+      if (time_count < STABLE_TIME / 2) {
+        t = init_temp + (t - init_temp) * time_count * 2 / STABLE_TIME;
+      } else {
+        t = t - 2.0;
+      }
+      time_count++;
+    }
+#endif
+#if FAHRENHEIT_DEGREE
+    t = t * 1.8 + 32;
+#endif
 
     xSemaphoreTake(xSensorDataMutex, portMAX_DELAY);
     sensor_data_latest.temperature = t;
@@ -891,7 +914,7 @@ void UpdateDisplay(uint8_t mode, uint8_t index_curr, uint8_t index_next)
     LCD_ShowImage(ICON_SENSOR_XPOS, ICON_SENSOR_YPOS,
                   ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[index_next].cur_icon);
     LCD_ShowSlide(screen[index_next].cur_index);
-    
+
   } else {
     // FIXED mode
     // Only redraw data, not redraw icon and bottom slides

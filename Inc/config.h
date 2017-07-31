@@ -10,6 +10,9 @@
 /* Private define ------------------------------------------------------------*/
 #define SENSOR_DATA_DEBUG       0
 
+#define TEMPERATURE_COMPENSATE  1
+#define FAHRENHEIT_DEGREE       1
+
 #define COMM_RECV_BUF_MAX       16
 #define COMM_SEND_BUF_MAX       256
 #define REC_TIM_DELAY           50
