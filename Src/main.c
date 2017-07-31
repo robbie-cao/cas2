@@ -891,13 +891,60 @@ void UpdateDataToDisplay(void)
   xSemaphoreGive(xSensorDataMutex);
 }
 
+uint8_t UpdateSymbolLevel(uint8_t cur_index)
+{
+  uint8_t level = 0;
+
+  switch (cur_index) {
+  case 2: // co2
+    if (display.data_to_display.co2 >= CO2_THRESHOLD_MAX) {
+      level = 24;
+    } else if (display.data_to_display.co2 >= CO2_THRESHOLD) {
+      level = 20 + (display.data_to_display.co2 - CO2_THRESHOLD) * 4 / (CO2_THRESHOLD_MAX - CO2_THRESHOLD);
+    } else if (display.data_to_display.co2 > CO2_THRESHOLD_MIN) {
+      level = (display.data_to_display.co2 - CO2_THRESHOLD_MIN) * 20 / (CO2_THRESHOLD - CO2_THRESHOLD_MIN);
+    } else {
+      level = 0;
+    }
+    break;
+  case 3: // tvoc
+    if (display.data_to_display.tvoc >= TVOC_THRESHOLD_MAX) {
+      level = 24;
+    } else if (display.data_to_display.tvoc >= TVOC_THRESHOLD) {
+      level = 20 + (display.data_to_display.tvoc - TVOC_THRESHOLD) * 4 / (TVOC_THRESHOLD_MAX - TVOC_THRESHOLD);
+    } else if (display.data_to_display.tvoc >= TVOC_THRESHOLD_MIN) {
+      level = (display.data_to_display.tvoc - TVOC_THRESHOLD_MIN) * 20 / (TVOC_THRESHOLD - TVOC_THRESHOLD_MIN);
+    } else {
+      level = 0;
+    }
+    break;
+  case 4: // pm25
+    if (display.data_to_display.pm25 >= PM25_THRESHOLD_MAX) {
+      level = 24;
+    } else if (display.data_to_display.pm25 >= PM25_THRESHOLD) {
+      level = 20 + (display.data_to_display.pm25 - PM25_THRESHOLD) * 4 / (PM25_THRESHOLD_MAX - PM25_THRESHOLD);
+    } else if (display.data_to_display.pm25 >= PM25_THRESHOLD_MIN) {
+      level = (display.data_to_display.pm25 - PM25_THRESHOLD_MIN) * 20 / (PM25_THRESHOLD - PM25_THRESHOLD_MIN);
+    } else {
+      level = 0;
+    }
+    break;
+  default:
+    break;
+  }
+
+  return level;
+}
+
 void UpdateDataOnScreen(uint8_t cur_index)
 {
-  memcpy(&display.data_on_screen, &display.data_to_display, sizeof(SensorData_t));
+  uint8_t level = UpdateSymbolLevel(cur_index);
   if(screen[cur_index].cur_symbol==1)
   {
-    LCD_ShowSymbol(13);
+    LCD_ShowSymbol(level);
   }
+
+  memcpy(&display.data_on_screen, &display.data_to_display, sizeof(SensorData_t));
 }
 
 

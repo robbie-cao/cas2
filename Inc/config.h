@@ -27,6 +27,14 @@
 #define TVOC_THRESHOLD          375
 #define CO2_THRESHOLD           750
 
+#define PM25_THRESHOLD_MAX      1000
+#define TVOC_THRESHOLD_MAX      1000
+#define CO2_THRESHOLD_MAX       2000
+
+#define PM25_THRESHOLD_MIN      0
+#define TVOC_THRESHOLD_MIN      0
+#define CO2_THRESHOLD_MIN       200
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
