@@ -75,23 +75,30 @@ enum slide_index
     INDEX_4 =4
 };
 
-#define ICON_SENSOR_WIDTH  280
-#define ICON_SENSOR_HEIGHT  60
-#define ICON_SENSOR_XPOS   100
-#define ICON_SENSOR_YPOS   20
+#define ICON_SENSOR_WIDTH  200
+#define ICON_SENSOR_HEIGHT  40
+#define ICON_SENSOR_XPOS   140
+#define ICON_SENSOR_YPOS   50
 
-#define ICON_DOT_WIDTH  14
-#define ICON_DOT_HEIGHT 14
-#define ICON_DOT_XPOS   184
-#define ICON_DOT_YPOS   290
-#define ICON_DOT_GAP    16
+#define ICON_DOT_WIDTH  16
+#define ICON_DOT_HEIGHT 16
+#define ICON_DOT_XPOS   180
+#define ICON_DOT_YPOS   14
+#define ICON_DOT_GAP    26
+
+
+#define ICON_SYMBOL_XPOS  40
+#define ICON_SYMBOL_YPOS  290
+#define ICON_SYMBOL_GAP   16
+#define ICON_SYMBOL_WIDTH  16
+#define ICON_SYMBOL_HEIGHT 16
 
 
 #define DIGIT_DOT_XPOS  280
 #define DIGIT_DOT_YPOS  230
 
 #define DIGIT_XPOS    48
-#define DIGIT_YPOS    92
+#define DIGIT_YPOS    118
 #define DOT_XPOS_ADJ  24
 
 #define DIG_DOT_WIDTH   20
@@ -199,6 +206,7 @@ void LCD_MaskImage(uint16_t Xpos, uint16_t Ypos, uint16_t width, uint16_t height
 void LCD_ShowSlide(uint8_t index);
 void LCD_ShowDot(void);
 void LCD_ShowDigtStr(u8 *p, uint8_t dot_flag, uint8_t bit_width);
+void LCD_ShowSymbol(uint8_t index);
 
 void LCD_ShowNumCenterAlign(uint16_t num, Font_t *font, uint16_t color);
 void LCD_ShowDotNumCenterAlign(float num, Font_t *font, uint16_t color);

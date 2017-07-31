@@ -1,7 +1,9 @@
 #include "lcd.h"
 #include "stdlib.h"
 #include "lcd_font.h"
-#include "slide.h"
+//#include "slide.h"
+#include "newslide.h"
+#include "indicator.h"
 
 
 
@@ -735,7 +737,7 @@ void LCD_ShowDotNumCenterAlign(float num, Font_t *font, uint16_t color)
     cur_xpos += font->width;
   }
 
-  uint8_t* cur_icon = (uint8_t *)icon_dot;
+  uint8_t* cur_icon = (uint8_t *)icon_newdot;
   LCD_ShowImage(cur_xpos, DIGIT_YPOS + font->height - ICON_DOT_HEIGHT, ICON_DOT_WIDTH, ICON_DOT_HEIGHT, cur_icon);
 
   cur_xpos += ICON_DOT_WIDTH;
@@ -779,7 +781,7 @@ void LCD_UpdateDotNumPartialCenterAlign(float num, float num_old, Font_t *font, 
       cur_xpos += font->width;
     }
 
-    uint8_t* cur_icon = (uint8_t *)icon_dot;
+    uint8_t* cur_icon = (uint8_t *)icon_newdot;
     LCD_ShowImage(cur_xpos, DIGIT_YPOS + font->height - ICON_DOT_HEIGHT, ICON_DOT_WIDTH, ICON_DOT_HEIGHT, cur_icon);
 
     cur_xpos += ICON_DOT_WIDTH;
@@ -1174,11 +1176,11 @@ void LCD_ShowSlide(uint8_t index)
        {
            if(index==k)
           {
-             cur_icon=(uint8_t*)icon_sdot;
+             cur_icon=(uint8_t*)icon_newsdot;
            }
            else
           {
-             cur_icon=(uint8_t*)icon_dot;
+             cur_icon=(uint8_t*)icon_newdot;
            }
 
            LCD_ShowImage(cur_xpos, ICON_DOT_YPOS,
@@ -1188,10 +1190,85 @@ void LCD_ShowSlide(uint8_t index)
     }
 }
 
+void LCD_ShowSymbol(uint8_t index)
+{
+    uint8_t* cur_icon;
+    uint16_t cur_xpos;
+    uint8_t k;
+
+    cur_xpos=ICON_SYMBOL_XPOS;
+    if(index>=0 && index<25)
+    {
+       for(k=0;k<25;k++)
+       {
+          if(k< 5)
+          {
+             if(index==k)
+            {
+               cur_icon=(uint8_t*)icon_litbigblue;
+             }
+             else
+            {
+               cur_icon=(uint8_t*)icon_litsmblue;
+             }
+          }
+          else if(k>=5 && k<10)
+          {
+             if(index==k)
+            {
+               cur_icon=(uint8_t*)icon_bigblue;
+             }
+             else
+            {
+               cur_icon=(uint8_t*)icon_smblue;
+             }
+          }
+          else if(k>=10 && k<15)
+          {
+             if(index==k)
+            {
+               cur_icon=(uint8_t*)icon_bigyellow;
+             }
+             else
+            {
+               cur_icon=(uint8_t*)icon_smyellow;
+             }
+          }
+          else if(k>=15 && k<20)
+          {
+             if(index==k)
+            {
+               cur_icon=(uint8_t*)icon_bigorange;
+             }
+             else
+            {
+               cur_icon=(uint8_t*)icon_smorange;
+             }
+          }  
+          else if(k>=20 && k<25)
+          {
+             if(index==k)
+            {
+               cur_icon=(uint8_t*)icon_bigred;
+             }
+             else
+            {
+               cur_icon=(uint8_t*)icon_smred;
+             }
+          }  
+       
+         LCD_ShowImage(cur_xpos, ICON_SYMBOL_YPOS,
+                         ICON_SYMBOL_WIDTH, ICON_SYMBOL_HEIGHT, cur_icon);
+         cur_xpos+=ICON_SYMBOL_GAP;
+       }
+      
+    }
+}
+
 void LCD_ShowDot(void)
 {
       uint8_t* cur_icon;
-      cur_icon=(uint8_t*)icon_bigdot;
+      cur_icon=(uint8_t*)icon_newdot;
       LCD_ShowImage(DIGIT_DOT_XPOS, DIGIT_DOT_YPOS, DIG_DOT_WIDTH, DIG_DOT_HEIGHT, cur_icon);
 }
 

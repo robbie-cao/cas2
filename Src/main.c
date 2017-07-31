@@ -58,6 +58,7 @@
 #include "lcd_font.h"
 #include "logo.h"
 #include "icon.h"
+#include "symbol.h"
 
 #include "voc.h"
 #include "sensair.h"
@@ -197,27 +198,27 @@ int fputc(int ch, FILE *f)
 void Screen_Init(void)
 {
   /* screen[0] for Temperature */
-  screen[0].cur_icon = (uint8_t*)icon_temp;
+  screen[0].cur_icon = (uint8_t*)icon_newtemp;
   screen[0].sensor.temp_val = sensor_data_latest.temperature;
   screen[0].cur_index = INDEX_0;
 
   /* screen[1] For Humidity */
-  screen[1].cur_icon = (uint8_t*)icon_hum;
+  screen[1].cur_icon = (uint8_t*)icon_newhumd;
   screen[1].sensor.humd_val = (uint16_t) sensor_data_latest.humidity;
   screen[1].cur_index = INDEX_1;
 
   /* screen[2] For CO2*/
-  screen[2].cur_icon = (uint8_t*)icon_co2;
+  screen[2].cur_icon = (uint8_t*)icon_newco2;
   screen[2].sensor.co2_val = sensor_data_latest.co2;
   screen[2].cur_index = INDEX_2;
 
   /* screen[3] For TVOC*/
-  screen[3].cur_icon = (uint8_t*)icon_tvoc;
+  screen[3].cur_icon = (uint8_t*)icon_newtvoc;
   screen[3].sensor.tvoc_val= sensor_data_latest.tvoc;
   screen[3].cur_index = INDEX_3;
 
   /* screen[4] For PM25*/
-  screen[4].cur_icon = (uint8_t*)icon_pm25;
+  screen[4].cur_icon = (uint8_t*)icon_newpm25;
   screen[4].sensor.pm25_val = sensor_data_latest.pm25;
   screen[4].cur_index = INDEX_4;
 
@@ -316,7 +317,7 @@ int main(void)
   Comm_Init();
 
   LCD_Init();
-  LCD_BKL_RESET;
+  LCD_BKL_SET;
 
   LCD_Clear(BLACK);
   POINT_COLOR = WHITE;
@@ -338,7 +339,7 @@ int main(void)
   HAL_Delay(10);
   PM25_StartMeasurement();
   HAL_Delay(100);
-
+  
   while (0) {
     LCD_Clear(BLACK);
     LCD_ShowNumCenterAlign(1234, &font_honey_light, WHITE);
@@ -856,6 +857,7 @@ void UpdateDataToDisplay(void)
 void UpdateDataOnScreen(void)
 {
   memcpy(&display.data_on_screen, &display.data_to_display, sizeof(SensorData_t));
+  LCD_ShowSymbol(23);
 }
 
 
@@ -880,6 +882,7 @@ void UpdateDisplay(uint8_t mode, uint8_t index_curr, uint8_t index_next)
     LCD_ShowImage(ICON_SENSOR_XPOS, ICON_SENSOR_YPOS,
                   ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[index_next].cur_icon);
     LCD_ShowSlide(screen[index_next].cur_index);
+    
   } else {
     // FIXED mode
     // Only redraw data, not redraw icon and bottom slides
@@ -1148,6 +1151,7 @@ void UpdateDisplay3(uint8_t mode, uint8_t index_curr, uint8_t index_next)
     // Only redraw data, not redraw icon and bottom slides
     UpdateSensorDataDisplayPartial(index_next);
   }
+
 }
 
 
