@@ -5,7 +5,14 @@
 #include "newslide.h"
 #include "indicator.h"
 
+#include "rfont.h"
+#include "wfont.h"
 
+Font_t bmp_font = {
+	114,
+	160,
+	(unsigned char *)NULL
+};
 
 u32 POINT_COLOR=0xFF000000;		//画笔颜色
 u32 BACK_COLOR =0xFFFFFFFF;  	//背景色
@@ -411,7 +418,7 @@ void LCD_Fill(u16 sx,u16 sy,u16 ex,u16 ey,u32 color)
 	xlen=ex-sx+1;
 	LCD_SetCursor(sx,sy,ex,ey);      				//设置光标位置
 	LCD_WriteRAM_Prepare();     			//开始写入GRAM
-	for(i=sy;i<=ey;i++)
+	for(i=sy;i<ey;i++)
 	{
 		for(j=0;j<xlen;j++)LCD->LCD_RAM=color;	//显示颜色
 	}
@@ -501,37 +508,21 @@ void LCD_Draw_Circle(u16 x0,u16 y0,u8 r)
 	}
 }
 
+
 void LCD_ShowChar(u16 x,u16 y,u8 num,u8 size,u8 mode)
 {
     u16 temp,t1,t;
 	u16 y0=y;
 	u16 csize;
-        if (size == 64) {
-          num = num - '0';
-          csize=(size/8+((size%8)?1:0))*42;
-          LCD_Fill(x,y,x+42-1,y+size-1,BLACK);
-        } else if (size == 96) {
-          num = num - '0';
-          csize=(size/8+((size%8)?1:0))*72;
-          LCD_Fill(x,y,x+72-1,y+size-1,BLACK);
-        } else if (size == 128) {
-          num = num - '0';
-          csize=(size/8+((size%8)?1:0))*83;
-          LCD_Fill(x,y,x+83-1,y+size-1,BLACK);
-        } else {
- 	num=num-' ';
+
+  	num=num-' ';
         csize=(size/8+((size%8)?1:0))*(size/2);		//得到字体一个字符对应点阵集所占的字节数
           LCD_Fill(x,y,x+size/2-1,y+size-1,BLACK);
-        }
+ 
 	for(t=0;t<csize;t++)
 	{
-		if(size==12)temp=asc2_1206[num][t]; 	 	//调用1206字体
-		else if(size==16)temp=asc2_1608[num][t];	//调用1608字体
-		else if(size==24)temp=asc2_2412[num][t];	//调用2412字体
-		else if(size==32)temp=asc2_3216[num][t];	//调用3216字体
-		else if(size==64)temp=asc2_6432[num][t];	//调用3216字体
-		else if(size==96)temp=asc2_96x72[num][t];	//调用3216字体
-		else if(size==128)temp=asc2_128[num][t];	//调用3216字体
+
+		if(size==32)temp=asc2_3216[num][t];	//调用3216字体
 		else return;								//没有的字库
 		for(t1=0;t1<8;t1++)
 		{
@@ -551,6 +542,7 @@ void LCD_ShowChar(u16 x,u16 y,u8 num,u8 size,u8 mode)
 	}
 }
 
+
 uint8_t LCD_NumLen(uint16_t num)
 {
   uint8_t len = 0;
@@ -562,6 +554,29 @@ uint8_t LCD_NumLen(uint16_t num)
 
   return len;
 }
+
+void LCD_ShowBMPDigit(u16 x, u16 y, u8 num, Font_t *font, uint16_t color)
+{
+  u16 width, height;
+  width=BMP_WIDTH;
+  height=BMP_HEIGHT;
+  
+  if(num>=0 && num<=9)
+  {
+
+   if(color==WHITE)
+   {
+     font->data =&white_digt[num][0];
+   }
+   else
+   {
+    font->data =&red_digt[num][0];
+   }
+  }
+  LCD_ShowImage(x, y, width, height, (uint8_t *)font->data);
+
+}
+
 
 void LCD_ShowHonDigit(u16 x, u16 y, u8 num, Font_t *font, uint16_t color)
 {
@@ -652,12 +667,20 @@ void LCD_ShowNumCenterAlign(uint16_t num, Font_t *font, uint16_t color)
   } while (temp);
 
   cur_xpos = (lcddev.width - font->width * len) / 2;
+#if (USE_BMP_FONT==1)
+  cur_ypos = BMP_YPOS;
+#else
   cur_ypos = DIGIT_YPOS;
-
+#endif
   for (t = 0; t < len; t++)
   {
     temp = (num / LCD_Pow(10, len - t - 1)) % 10;
+
+#if (USE_BMP_FONT==1)
+    LCD_ShowBMPDigit(cur_xpos, cur_ypos, temp, &bmp_font, color);
+#else
     LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
+#endif
     cur_xpos += font->width;
   }
 }
@@ -679,22 +702,37 @@ void LCD_UpdateNumPartialCenterAlign(uint16_t num, uint16_t num_old, Font_t *fon
   if (len != len_old) {
 
     xpos_old = (lcddev.width - font->width * len_old) / 2;
+#if (USE_BMP_FONT==1)
+    ypos_old = BMP_YPOS;
+#else
     ypos_old = DIGIT_YPOS;
-
+#endif
     // Clear previous
     LCD_Fill(xpos_old, ypos_old, xpos_old + font->width * len_old - 1, ypos_old + font->height - 1, BLACK);
     cur_xpos = (lcddev.width - font->width * len) / 2;
+#if (USE_BMP_FONT==1)
+    cur_ypos = BMP_YPOS;
+#else
     cur_ypos = DIGIT_YPOS;
+#endif
 
     for (t = 0; t < len; t++)
     {
       temp = (num / LCD_Pow(10, len - t - 1)) % 10;
+#if (USE_BMP_FONT==1)
+      LCD_ShowBMPDigit(cur_xpos, cur_ypos, temp , &bmp_font, color);
+#else
       LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
+#endif
       cur_xpos += font->width;
     }
   } else {
     cur_xpos = (lcddev.width - font->width * len) / 2;
+#if (USE_BMP_FONT==1)
+    cur_ypos = BMP_YPOS;
+#else
     cur_ypos = DIGIT_YPOS;
+#endif
 
     for (t = 0; t < len; t++)
     {
@@ -705,13 +743,19 @@ void LCD_UpdateNumPartialCenterAlign(uint16_t num, uint16_t num_old, Font_t *fon
 
       if (temp != temp2) {
         LCD_Fill(cur_xpos, cur_ypos, cur_xpos + font->width - 1, cur_ypos + font->height - 1, BLACK);
-        LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
+#if (USE_BMP_FONT==1)
+      LCD_ShowBMPDigit(cur_xpos, cur_ypos, temp , &bmp_font, color);
+#else
+      LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
+#endif
+ 
       }
       cur_xpos += font->width;
     }
   }
 }
 
+#if (USE_BMP_FONT==0)
 void LCD_ShowDotNumCenterAlign(float num, Font_t *font, uint16_t color)
 {
   uint16_t num1 = (uint16_t)num;
@@ -813,33 +857,26 @@ void LCD_UpdateDotNumPartialCenterAlign(float num, float num_old, Font_t *font, 
     }
   }
 }
+#endif
 
 void LCD_Test(void)
 {
   LCD_Clear(BLACK);
-  LCD_ShowNumCenterAlign(0, &font_honey_light, WHITE);
+  LCD_ShowNumCenterAlign(0, &bmp_font, WHITE);
   HAL_Delay(1000);
   LCD_Clear(BLACK);
-  LCD_ShowNumCenterAlign(12, &font_honey_light, WHITE);
+  LCD_ShowNumCenterAlign(12, &bmp_font, RED);
   HAL_Delay(1000);
   LCD_Clear(BLACK);
-  LCD_ShowNumCenterAlign(345, &font_honey_light, WHITE);
+  LCD_ShowNumCenterAlign(345, &bmp_font, WHITE);
   HAL_Delay(1000);
   LCD_Clear(BLACK);
-  LCD_ShowNumCenterAlign(6789, &font_honey_light, WHITE);
+  LCD_ShowNumCenterAlign(6789, &bmp_font, RED);
   HAL_Delay(1000);
-  LCD_Clear(BLACK);
-  LCD_ShowDotNumCenterAlign(0.12, &font_honey_light, WHITE);
-  HAL_Delay(1000);
-  LCD_Clear(BLACK);
-  LCD_ShowDotNumCenterAlign(23.4, &font_honey_light, WHITE);
-  HAL_Delay(1000);
-  LCD_Clear(BLACK);
-  LCD_ShowDotNumCenterAlign(567.89, &font_honey_light, WHITE);
-  HAL_Delay(1000);
+ 
 }
 
-
+#if (USE_BMP_FONT==0)
 void LCD_ShowDigit(u16 x,u16 y,u8 num,u16 size,u8 mode)
 {
         u16 temp,t1,t;
@@ -870,6 +907,7 @@ void LCD_ShowDigit(u16 x,u16 y,u8 num,u16 size,u8 mode)
 		}
 	}
 }
+
 
 void LCD_ShowDigit2(u16 x,u16 y,u8 num,u16 size,u8 mode)
 {
@@ -909,7 +947,7 @@ void LCD_ShowDigit2(u16 x,u16 y,u8 num,u16 size,u8 mode)
 		}
 	}
 }
-
+#endif
 
 void LCD_ShowDigtStr(u8 *p, uint8_t dot_flag, uint8_t bit_width)
 {

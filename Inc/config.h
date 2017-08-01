@@ -11,6 +11,7 @@
 #define SENSOR_DATA_DEBUG       0
 
 #define TEMPERATURE_NO_DOT      1
+#define USE_BMP_FONT            1
 
 #define TEMPERATURE_COMPENSATE  1
 #define FAHRENHEIT_DEGREE       1

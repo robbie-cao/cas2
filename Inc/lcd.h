@@ -5,7 +5,9 @@
 #include <stdint.h>
 
 #include "stm32f4xx_hal.h"
-#include "lcd_font.h"
+//#include "lcd_font.h"
+#include "config.h"
+
 
 
 /* Pin definitions */
@@ -50,8 +52,14 @@ typedef struct
 
 extern _lcd_dev   lcddev;      // 管理LCD重要参数
 extern u32        POINT_COLOR; // 默认红色
-extern u32        BACK_COLOR;  // 背景颜色.默认为白色
+extern u32        BACK_COLOR;  // 背景颜色.默认void LCD_ShowHonDigit(u16 x, u16 y, u8 num, Font_t *font, uint16_t color)
 
+
+typedef struct {
+	uint8_t width;    
+	uint8_t height;   
+	const unsigned char *data; 
+} Font_t;
 
 
 
@@ -114,6 +122,10 @@ enum slide_index
 #define LOGO_YPOS       124
 #define LOGO_WIDTH      420
 #define LOGO_HEIGHT     72
+
+#define BMP_WIDTH      114
+#define BMP_HEIGHT     160
+#define BMP_YPOS       110
 
 typedef struct
 {
@@ -207,6 +219,7 @@ void LCD_ShowSlide(uint8_t index);
 void LCD_ShowDot(void);
 void LCD_ShowDigtStr(u8 *p, uint8_t dot_flag, uint8_t bit_width);
 void LCD_ShowSymbol(uint8_t index);
+void LCD_ShowBMPDigit(u16 x, u16 y, u8 num, Font_t *font, uint16_t color);
 
 void LCD_ShowNumCenterAlign(uint16_t num, Font_t *font, uint16_t color);
 void LCD_ShowDotNumCenterAlign(float num, Font_t *font, uint16_t color);
