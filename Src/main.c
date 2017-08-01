@@ -899,34 +899,46 @@ uint8_t UpdateSymbolLevel(uint8_t cur_index)
   case 2: // co2
     if (display.data_to_display.co2 >= CO2_THRESHOLD_MAX) {
       level = 24;
-    } else if (display.data_to_display.co2 >= CO2_THRESHOLD) {
-      level = 20 + (display.data_to_display.co2 - CO2_THRESHOLD) * 4 / (CO2_THRESHOLD_MAX - CO2_THRESHOLD);
-    } else if (display.data_to_display.co2 > CO2_THRESHOLD_MIN) {
-      level = (display.data_to_display.co2 - CO2_THRESHOLD_MIN) * 20 / (CO2_THRESHOLD - CO2_THRESHOLD_MIN);
+    } else if (display.data_to_display.co2 >= CO2_LEVEL_4) {
+      level = 20 + (display.data_to_display.co2 - CO2_LEVEL_4) * 4 / (CO2_THRESHOLD_MAX - CO2_LEVEL_4);
+    } else if (display.data_to_display.co2 >= CO2_LEVEL_3) {
+      level = 15 + (display.data_to_display.co2 - CO2_LEVEL_3) * 4 / (CO2_LEVEL_4 - CO2_LEVEL_3);
+    } else if (display.data_to_display.co2 >= CO2_LEVEL_2) {
+      level = 10 + (display.data_to_display.co2 - CO2_LEVEL_2) * 4 / (CO2_LEVEL_3 - CO2_LEVEL_2);
+    } else if (display.data_to_display.co2 >= CO2_LEVEL_1) {
+      level = 5 + (display.data_to_display.co2 - CO2_LEVEL_1) * 4 / (CO2_LEVEL_2 - CO2_LEVEL_1);
     } else {
-      level = 0;
+      level = 0 + (display.data_to_display.co2 - CO2_LEVEL_0) * 4 / (CO2_LEVEL_1 - CO2_LEVEL_0);
     }
     break;
   case 3: // tvoc
     if (display.data_to_display.tvoc >= TVOC_THRESHOLD_MAX) {
       level = 24;
-    } else if (display.data_to_display.tvoc >= TVOC_THRESHOLD) {
-      level = 20 + (display.data_to_display.tvoc - TVOC_THRESHOLD) * 4 / (TVOC_THRESHOLD_MAX - TVOC_THRESHOLD);
-    } else if (display.data_to_display.tvoc >= TVOC_THRESHOLD_MIN) {
-      level = (display.data_to_display.tvoc - TVOC_THRESHOLD_MIN) * 20 / (TVOC_THRESHOLD - TVOC_THRESHOLD_MIN);
+    } else if (display.data_to_display.tvoc >= TVOC_LEVEL_4) {
+      level = 20 + (display.data_to_display.tvoc - TVOC_LEVEL_4) * 4 / (TVOC_THRESHOLD_MAX - TVOC_LEVEL_4);
+    } else if (display.data_to_display.tvoc >= TVOC_LEVEL_3) {
+      level = 15 + (display.data_to_display.tvoc - TVOC_LEVEL_3) * 4 / (TVOC_LEVEL_4 - TVOC_LEVEL_3);
+    } else if (display.data_to_display.tvoc >= TVOC_LEVEL_2) {
+      level = 10 + (display.data_to_display.tvoc - TVOC_LEVEL_2) * 4 / (TVOC_LEVEL_3 - TVOC_LEVEL_2);
+    } else if (display.data_to_display.tvoc >= TVOC_LEVEL_1) {
+      level = 5 + (display.data_to_display.tvoc - TVOC_LEVEL_1) * 4 / (TVOC_LEVEL_2 - TVOC_LEVEL_1);
     } else {
-      level = 0;
+      level = 0 + (display.data_to_display.tvoc - TVOC_LEVEL_0) * 4 / (TVOC_LEVEL_1 - TVOC_LEVEL_0);
     }
     break;
   case 4: // pm25
     if (display.data_to_display.pm25 >= PM25_THRESHOLD_MAX) {
       level = 24;
-    } else if (display.data_to_display.pm25 >= PM25_THRESHOLD) {
-      level = 20 + (display.data_to_display.pm25 - PM25_THRESHOLD) * 4 / (PM25_THRESHOLD_MAX - PM25_THRESHOLD);
-    } else if (display.data_to_display.pm25 >= PM25_THRESHOLD_MIN) {
-      level = (display.data_to_display.pm25 - PM25_THRESHOLD_MIN) * 20 / (PM25_THRESHOLD - PM25_THRESHOLD_MIN);
+    } else if (display.data_to_display.pm25 >= PM25_LEVEL_4) {
+      level = 20 + (display.data_to_display.pm25 - PM25_LEVEL_4) * 4 / (PM25_THRESHOLD_MAX - PM25_LEVEL_4);
+    } else if (display.data_to_display.pm25 >= PM25_LEVEL_3) {
+      level = 15 + (display.data_to_display.pm25 - PM25_LEVEL_3) * 4 / (PM25_LEVEL_4 - PM25_LEVEL_3);
+    } else if (display.data_to_display.pm25 >= PM25_LEVEL_2) {
+      level = 10 + (display.data_to_display.pm25 - PM25_LEVEL_2) * 4 / (PM25_LEVEL_3 - PM25_LEVEL_2);
+    } else if (display.data_to_display.pm25 >= PM25_LEVEL_1) {
+      level = 5 + (display.data_to_display.pm25 - PM25_LEVEL_1) * 4 / (PM25_LEVEL_2 - PM25_LEVEL_1);
     } else {
-      level = 0;
+      level = 0 + (display.data_to_display.pm25 - PM25_LEVEL_0) * 4 / (PM25_LEVEL_1 - PM25_LEVEL_0);
     }
     break;
   default:
