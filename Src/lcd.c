@@ -518,7 +518,7 @@ void LCD_ShowChar(u16 x,u16 y,u8 num,u8 size,u8 mode)
   	num=num-' ';
         csize=(size/8+((size%8)?1:0))*(size/2);		//得到字体一个字符对应点阵集所占的字节数
           LCD_Fill(x,y,x+size/2-1,y+size-1,BLACK);
- 
+
 	for(t=0;t<csize;t++)
 	{
 
@@ -560,7 +560,7 @@ void LCD_ShowBMPDigit(u16 x, u16 y, u8 num, Font_t *font, uint16_t color)
   u16 width, height;
   width=BMP_WIDTH;
   height=BMP_HEIGHT;
-  
+
   if(num>=0 && num<=9)
   {
 
@@ -748,7 +748,7 @@ void LCD_UpdateNumPartialCenterAlign(uint16_t num, uint16_t num_old, Font_t *fon
 #else
       LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
 #endif
- 
+
       }
       cur_xpos += font->width;
     }
@@ -873,7 +873,7 @@ void LCD_Test(void)
   LCD_Clear(BLACK);
   LCD_ShowNumCenterAlign(6789, &bmp_font, RED);
   HAL_Delay(1000);
- 
+
 }
 
 #if (USE_BMP_FONT==0)
@@ -1176,7 +1176,12 @@ void LCD_ShowImage(uint16_t Xpos, uint16_t Ypos, uint16_t width, uint16_t height
      {
 
          data =(*p)|((*(p+1))<<8);
+#if 0
+         // Use LCD_Fast_DrawPoint is slower than directly write with LCD_WR_DATA
          LCD_Fast_DrawPoint(Xpos+k,Ypos+i,data);
+#else
+         LCD_WR_DATA(data);
+#endif
          p+=2;
      }
    }
@@ -1282,7 +1287,7 @@ void LCD_ShowSymbol(uint8_t index)
             {
                cur_icon=(uint8_t*)icon_smorange;
              }
-          }  
+          }
           else if(k>=20 && k<25)
           {
              if(index==k)
@@ -1293,13 +1298,13 @@ void LCD_ShowSymbol(uint8_t index)
             {
                cur_icon=(uint8_t*)icon_smred;
              }
-          }  
-       
+          }
+
          LCD_ShowImage(cur_xpos, ICON_SYMBOL_YPOS,
                          ICON_SYMBOL_WIDTH, ICON_SYMBOL_HEIGHT, cur_icon);
          cur_xpos+=ICON_SYMBOL_GAP;
        }
-      
+
     }
 }
 
