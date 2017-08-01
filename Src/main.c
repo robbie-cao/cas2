@@ -325,6 +325,10 @@ int main(void)
   LCD_Init();
   LCD_BKL_SET;
 
+#if DISPLAY_INVERSE
+  LCD_WR_REG(0x21);
+#endif
+
   LCD_Clear(BLACK);
   POINT_COLOR = WHITE;
 
