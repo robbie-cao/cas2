@@ -180,13 +180,14 @@ typedef struct
 #define LBBLUE        0x2B12  // 浅棕蓝色(选择条目的反色)
 
 
-#if (WHITE_BKG==0)
-#define BKG     BLACK
-#define PEN     WHITE
-#else
+#if (WHITE_BKG==1)
 #define BKG     WHITE
 #define PEN     BLACK
+#else
+#define BKG     BLACK
+#define PEN     WHITE
 #endif
+
 
 void LCD_Init(void);
 void LCD_DisplayOn(void);

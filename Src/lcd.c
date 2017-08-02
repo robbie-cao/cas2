@@ -1,15 +1,17 @@
 #include "lcd.h"
 #include "stdlib.h"
 #include "lcd_font.h"
-//#include "slide.h"
-#include "newslide.h"
-#include "indicator.h"
 
-#if (WHITE_BKG==0)
-#include "rfont.h"
-#include "wfont.h"
+#if (WHITE_BKG==1)
+#include "wrfont.h"
+#include "wbfont.h"
+#include "wnewslide.h"
+#include "windicator.h"
 #else
-// white UI
+#include "brfont.h"
+#include "bwfont.h"
+#include "bnewslide.h"
+#include "bindicator.h"
 #endif
 
 Font_t bmp_font = {
@@ -568,13 +570,13 @@ void LCD_ShowBMPDigit(u16 x, u16 y, u8 num, Font_t *font, uint16_t color)
   if(num>=0 && num<=9)
   {
 
-   if(color==WHITE)
+   if(color==HON_RED)
    {
-     font->data =&white_digt[num][0];
+     font->data =&red_digt[num][0];
    }
    else
    {
-    font->data =&red_digt[num][0];
+       font->data =&white_digt[num][0];
    }
   }
   LCD_ShowImage(x, y, width, height, (uint8_t *)font->data);

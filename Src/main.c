@@ -55,10 +55,15 @@
 #include "cmsis_os.h"
 
 #include "lcd.h"
-//#include "lcd_font.h"
-#include "logo.h"
 #include "icon.h"
-#include "symbol.h"
+//#include "lcd_font.h"
+#if (WHITE_BKG==1)
+#include "wlogo.h"
+#include "wsymbol.h"
+#else
+#include "blogo.h"
+#include "bsymbol.h"
+#endif
 
 #include "voc.h"
 #include "sensair.h"
@@ -950,7 +955,7 @@ void UpdateDisplay(uint8_t mode, uint8_t index_curr, uint8_t index_next)
   uint8_t bit_width;
   char buf[4] = {0};
 
-  POINT_COLOR = WHITE;
+  POINT_COLOR = PEN;
   if (mode == SCROLL_MODE || index_curr != index_next) {
     // SCROLL mode or FIXED mode for the first time
     // Clear whole screen and redraw icon and bottom slides
@@ -1087,7 +1092,7 @@ void UpdateSensorDataDisplay(uint8_t index_next)
 
 void UpdateSensorDataDisplayPartial(uint8_t index_next)
 {
-  uint16_t color = WHITE;
+  uint16_t color = PEN;
 
   switch (index_next) {
   case 0:
@@ -1183,9 +1188,9 @@ void UpdateSensorDataDisplayPartial(uint8_t index_next)
 
 void UpdateDisplay2(uint8_t mode, uint8_t index_curr, uint8_t index_next)
 {
-  uint16_t color = WHITE;
+  uint16_t color = PEN;
 
-  POINT_COLOR = WHITE;
+  POINT_COLOR = PEN;
   if (mode == SCROLL_MODE || index_curr != index_next) {
     // SCROLL mode or FIXED mode for the first time
     // Clear whole screen and redraw icon and bottom slides
