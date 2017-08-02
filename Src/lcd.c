@@ -1180,7 +1180,7 @@ void LCD_ShowImage(uint16_t Xpos, uint16_t Ypos, uint16_t width, uint16_t height
      {
 
          data =(*p)|((*(p+1))<<8);
-#if 0
+#if 1
          // Use LCD_Fast_DrawPoint is slower than directly write with LCD_WR_DATA
          LCD_Fast_DrawPoint(Xpos+k,Ypos+i,data);
 #else
