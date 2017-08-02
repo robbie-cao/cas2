@@ -14,6 +14,7 @@
 
 #define TEMPERATURE_NO_DOT      1
 #define USE_BMP_FONT            1
+#define WHITE_BKG               0
 
 #define TEMPERATURE_COMPENSATE  1
 #define FAHRENHEIT_DEGREE       1

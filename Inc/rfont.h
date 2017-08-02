@@ -1,3 +1,5 @@
+#include "config.h"
+#if (WHITE_BKG==0)
 const unsigned char red_digt[10][36480] = {
 { /* 0X00,0X10,0X72,0X00,0XA0,0X00,0X01,0X1B, */
 0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,
@@ -22829,7 +22831,7 @@ const unsigned char red_digt[10][36480] = {
 0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00},
 };
 
-
+#endif
 
 
 

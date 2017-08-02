@@ -5,8 +5,12 @@
 #include "newslide.h"
 #include "indicator.h"
 
+#if (WHITE_BKG==0)
 #include "rfont.h"
 #include "wfont.h"
+#else
+// white UI
+#endif
 
 Font_t bmp_font = {
 	114,
@@ -395,7 +399,7 @@ void LCD_Init(void)
 	LCD_Delay(10);
 
 	LCD_Display_Dir(1);		//默认为竖屏
-	LCD_Clear(BLACK);
+	LCD_Clear(BKG);
 }
 
 void LCD_Clear(u32 color)
@@ -517,7 +521,7 @@ void LCD_ShowChar(u16 x,u16 y,u8 num,u8 size,u8 mode)
 
   	num=num-' ';
         csize=(size/8+((size%8)?1:0))*(size/2);		//得到字体一个字符对应点阵集所占的字节数
-          LCD_Fill(x,y,x+size/2-1,y+size-1,BLACK);
+          LCD_Fill(x,y,x+size/2-1,y+size-1,BKG);
 
 	for(t=0;t<csize;t++)
 	{
@@ -586,7 +590,7 @@ void LCD_ShowHonDigit(u16 x, u16 y, u8 num, Font_t *font, uint16_t color)
 
   num = num - 0x30;
 
-  // LCD_Fill(x, y, x + font->width - 1, y + font->height - 1, BLACK);
+  // LCD_Fill(x, y, x + font->width - 1, y + font->height - 1, BKG);
   for (t = 0; t < csize; t++)
   {
     temp = font->data[csize * num + t];
@@ -622,7 +626,7 @@ void LCD_ShowHonDigit2(u16 x, u16 y, u8 num, Font_t *font, uint16_t color, uint1
 
   num = num - 0x30;
 
-  // LCD_Fill(x, y, x + font->width - 1, y + font->height - 1, BLACK);
+  // LCD_Fill(x, y, x + font->width - 1, y + font->height - 1, BKG);
   for (t = 0; t < csize; t++)
   {
     temp = font->data[csize * num + t];
@@ -708,7 +712,7 @@ void LCD_UpdateNumPartialCenterAlign(uint16_t num, uint16_t num_old, Font_t *fon
     ypos_old = DIGIT_YPOS;
 #endif
     // Clear previous
-    LCD_Fill(xpos_old, ypos_old, xpos_old + font->width * len_old - 1, ypos_old + font->height - 1, BLACK);
+    LCD_Fill(xpos_old, ypos_old, xpos_old + font->width * len_old - 1, ypos_old + font->height - 1, BKG);
     cur_xpos = (lcddev.width - font->width * len) / 2;
 #if (USE_BMP_FONT==1)
     cur_ypos = BMP_YPOS;
@@ -742,7 +746,7 @@ void LCD_UpdateNumPartialCenterAlign(uint16_t num, uint16_t num_old, Font_t *fon
       temp2 = (num_old / LCD_Pow(10, len - t - 1)) % 10;
 
       if (temp != temp2) {
-        LCD_Fill(cur_xpos, cur_ypos, cur_xpos + font->width - 1, cur_ypos + font->height - 1, BLACK);
+        LCD_Fill(cur_xpos, cur_ypos, cur_xpos + font->width - 1, cur_ypos + font->height - 1, BKG);
 #if (USE_BMP_FONT==1)
       LCD_ShowBMPDigit(cur_xpos, cur_ypos, temp , &bmp_font, color);
 #else
@@ -813,7 +817,7 @@ void LCD_UpdateDotNumPartialCenterAlign(float num, float num_old, Font_t *font, 
     xpos_old = (lcddev.width - font->width * (len_old + 1) - ICON_DOT_WIDTH) / 2;
     ypos_old = DIGIT_YPOS;
     // Clear previous
-    LCD_Fill(xpos_old, ypos_old, xpos_old + font->width * (len_old + 1) + ICON_DOT_WIDTH - 1, ypos_old + font->height - 1, BLACK);
+    LCD_Fill(xpos_old, ypos_old, xpos_old + font->width * (len_old + 1) + ICON_DOT_WIDTH - 1, ypos_old + font->height - 1, BKG);
 
     cur_xpos = (lcddev.width - font->width * (len + 1) - ICON_DOT_WIDTH) / 2;
     cur_ypos = DIGIT_YPOS;
@@ -842,7 +846,7 @@ void LCD_UpdateDotNumPartialCenterAlign(float num, float num_old, Font_t *font, 
       temp2 = (num1_old / LCD_Pow(10, len - t - 1)) % 10;
 
       if (temp != temp2) {
-        LCD_Fill(cur_xpos, cur_ypos, cur_xpos + font->width - 1, cur_ypos + font->height - 1, BLACK);
+        LCD_Fill(cur_xpos, cur_ypos, cur_xpos + font->width - 1, cur_ypos + font->height - 1, BKG);
         LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
       }
       cur_xpos += font->width;
@@ -852,7 +856,7 @@ void LCD_UpdateDotNumPartialCenterAlign(float num, float num_old, Font_t *font, 
     temp = num2;
     temp2 = num2_old;
     if (temp != temp2) {
-      LCD_Fill(cur_xpos, cur_ypos, cur_xpos + font->width - 1, cur_ypos + font->height - 1, BLACK);
+      LCD_Fill(cur_xpos, cur_ypos, cur_xpos + font->width - 1, cur_ypos + font->height - 1, BKG);
       LCD_ShowHonDigit(cur_xpos, cur_ypos, temp + '0', &font_honey_light, color);
     }
   }
@@ -861,16 +865,16 @@ void LCD_UpdateDotNumPartialCenterAlign(float num, float num_old, Font_t *font, 
 
 void LCD_Test(void)
 {
-  LCD_Clear(BLACK);
-  LCD_ShowNumCenterAlign(0, &bmp_font, WHITE);
+  LCD_Clear(BKG);
+  LCD_ShowNumCenterAlign(0, &bmp_font, RED);
   HAL_Delay(1000);
-  LCD_Clear(BLACK);
+  LCD_Clear(BKG);
   LCD_ShowNumCenterAlign(12, &bmp_font, RED);
   HAL_Delay(1000);
-  LCD_Clear(BLACK);
-  LCD_ShowNumCenterAlign(345, &bmp_font, WHITE);
+  LCD_Clear(BKG);
+  LCD_ShowNumCenterAlign(345, &bmp_font, RED);
   HAL_Delay(1000);
-  LCD_Clear(BLACK);
+  LCD_Clear(BKG);
   LCD_ShowNumCenterAlign(6789, &bmp_font, RED);
   HAL_Delay(1000);
 
@@ -885,7 +889,7 @@ void LCD_ShowDigit(u16 x,u16 y,u8 num,u16 size,u8 mode)
 
  	num=num-0x30;
 
-//        LCD_Fill(x,y,x+DIGIT_WIDTH-1,y+size-1,BLACK);
+//        LCD_Fill(x,y,x+DIGIT_WIDTH-1,y+size-1,BKG);
 	for(t=0;t<csize;t++)
 	{
 	       temp=honeydigit[num][t];

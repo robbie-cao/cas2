@@ -330,18 +330,18 @@ int main(void)
   LCD_WR_REG(0x21);
 #endif
 
-  LCD_Clear(BLACK);
-  POINT_COLOR = WHITE;
+  LCD_Clear(BKG);
+  POINT_COLOR = PEN;
 
   /* USER CODE BEGIN 2 */
   printf("Start...\r\n");
 
 
-  POINT_COLOR=WHITE;
+  POINT_COLOR=PEN;
 
   LCD_ShowImage(LOGO_XPOS, LOGO_YPOS, LOGO_WIDTH, LOGO_HEIGHT, (uint8_t*)logo);
   HAL_Delay(1000);
-  LCD_Clear(BLACK);
+  LCD_Clear(BKG);
 
   PM25_StopAutoSend();
   PM25_StopAutoSend();
@@ -954,11 +954,7 @@ void UpdateDisplay(uint8_t mode, uint8_t index_curr, uint8_t index_next)
   if (mode == SCROLL_MODE || index_curr != index_next) {
     // SCROLL mode or FIXED mode for the first time
     // Clear whole screen and redraw icon and bottom slides
-
-    //LCD_Scroll_On(LEFT);
-    LCD_Clear(BLACK);
-
-    //LCD_MaskImage(0,0,480,320, BLACK);
+    LCD_Clear(BKG);
 
     memset(buf, 0, sizeof(buf));
     LCD_ShowImage(ICON_SENSOR_XPOS, ICON_SENSOR_YPOS,
@@ -968,7 +964,7 @@ void UpdateDisplay(uint8_t mode, uint8_t index_curr, uint8_t index_next)
   } else {
     // FIXED mode
     // Only redraw data, not redraw icon and bottom slides
-    LCD_Fill(DIGIT_XPOS, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+    LCD_Fill(DIGIT_XPOS, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BKG);
   }
 
   memset(buf, 0, sizeof(buf));
@@ -1043,7 +1039,7 @@ void UpdateDisplay(uint8_t mode, uint8_t index_curr, uint8_t index_next)
 
 void UpdateSensorDataDisplay(uint8_t index_next)
 {
-  uint16_t color = WHITE;
+  uint16_t color = PEN;
 
   switch (index_next) {
   case 0:
@@ -1112,14 +1108,14 @@ void UpdateSensorDataDisplayPartial(uint8_t index_next)
 
       } else {
 
-        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS+ BMP_HEIGHT, BLACK);
+        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS+ BMP_HEIGHT, BKG);
         LCD_ShowNumCenterAlign(display.data_to_display.co2, &bmp_font, color);     
 
       }
     } else {
       if (display.data_on_screen.co2 > CO2_THRESHOLD) {
 
-        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS+ BMP_HEIGHT, BLACK);
+        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS+ BMP_HEIGHT, BKG);
         LCD_ShowNumCenterAlign(display.data_to_display.co2, &bmp_font, color);  
 
       } else {
@@ -1138,14 +1134,14 @@ void UpdateSensorDataDisplayPartial(uint8_t index_next)
 
       } else {
 
-        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BLACK);
+        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
         LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &bmp_font, color);       
 
       }
     } else {
       if (display.data_on_screen.tvoc > TVOC_THRESHOLD) {
 
-        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BLACK);
+        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
         LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &bmp_font, color);  
       } else {
 
@@ -1163,13 +1159,13 @@ void UpdateSensorDataDisplayPartial(uint8_t index_next)
         
       } else {
 
-        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BLACK);
+        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
         LCD_ShowNumCenterAlign(display.data_to_display.pm25, &bmp_font, color);      
       }
     } else {
       if (display.data_on_screen.pm25 > PM25_THRESHOLD) {
 
-        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BLACK);
+        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
         LCD_ShowNumCenterAlign(display.data_to_display.pm25, &bmp_font, color);   
         
       } else {
@@ -1193,11 +1189,7 @@ void UpdateDisplay2(uint8_t mode, uint8_t index_curr, uint8_t index_next)
   if (mode == SCROLL_MODE || index_curr != index_next) {
     // SCROLL mode or FIXED mode for the first time
     // Clear whole screen and redraw icon and bottom slides
-
-    //LCD_Scroll_On(LEFT);
-    LCD_Clear(BLACK);
-
-    //LCD_MaskImage(0,0,480,320, BLACK);
+    LCD_Clear(BKG);
 
     LCD_ShowImage(ICON_SENSOR_XPOS, ICON_SENSOR_YPOS,
                   ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[index_next].cur_icon);
@@ -1205,10 +1197,10 @@ void UpdateDisplay2(uint8_t mode, uint8_t index_curr, uint8_t index_next)
   } else {
     // FIXED mode
     // Only redraw data, not redraw icon and bottom slides
-    LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BLACK);
+    LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BKG);
   }
 
-  color = WHITE;
+  color = PEN;
   switch (index_next) {
   case 0:
     if (display.data_to_display.temperature < 0 ) //Negative value
@@ -1254,17 +1246,14 @@ void UpdateDisplay2(uint8_t mode, uint8_t index_curr, uint8_t index_next)
 
 void UpdateDisplay3(uint8_t mode, uint8_t index_curr, uint8_t index_next)
 {
-  uint16_t color = WHITE;
+  uint16_t color = PEN;
 
-  POINT_COLOR = WHITE;
+  POINT_COLOR = PEN;
   if (mode == SCROLL_MODE || index_curr != index_next) {
     // SCROLL mode or FIXED mode for the first time
     // Clear whole screen and redraw icon and bottom slides
 
-    //LCD_Scroll_On(LEFT);
-    LCD_Clear(BLACK);
-
-    //LCD_MaskImage(0,0,480,320, BLACK);
+    LCD_Clear(BKG);
 
     LCD_ShowImage(ICON_SENSOR_XPOS, ICON_SENSOR_YPOS,
                   ICON_SENSOR_WIDTH, ICON_SENSOR_HEIGHT, (uint8_t*)screen[index_next].cur_icon);

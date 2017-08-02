@@ -1,3 +1,5 @@
+#include "config.h"
+#if (WHITE_BKG==0)
 
 const unsigned char white_digt[10][36480] = {
 
@@ -22823,3 +22825,4 @@ const unsigned char white_digt[10][36480] = {
 0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,
 0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00},
 };
+#endif

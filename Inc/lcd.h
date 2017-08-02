@@ -9,7 +9,6 @@
 #include "config.h"
 
 
-
 /* Pin definitions */
 #define LCD_RST_PORT      GPIOF
 #define LCD_RST_PIN       GPIO_PIN_10
@@ -179,6 +178,15 @@ typedef struct
 
 #define LGRAYBLUE     0xA651  // 浅灰蓝色(中间层颜色)
 #define LBBLUE        0x2B12  // 浅棕蓝色(选择条目的反色)
+
+
+#if (WHITE_BKG==0)
+#define BKG     BLACK
+#define PEN     WHITE
+#else
+#define BKG     WHITE
+#define PEN     BLACK
+#endif
 
 void LCD_Init(void);
 void LCD_DisplayOn(void);
