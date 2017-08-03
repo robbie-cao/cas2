@@ -331,10 +331,6 @@ int main(void)
   LCD_Init();
   LCD_BKL_SET;
 
-#if DISPLAY_INVERSE
-  LCD_WR_REG(0x21);
-#endif
-
   LCD_Clear(BKG);
   POINT_COLOR = PEN;
 
@@ -1202,7 +1198,7 @@ void UpdateDisplay2(uint8_t mode, uint8_t index_curr, uint8_t index_next)
   } else {
     // FIXED mode
     // Only redraw data, not redraw icon and bottom slides
-    LCD_Fill(0, DIGIT_YPOS, 480, DIGIT_YPOS+DIGIT_HEIGHT, BKG);
+    LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS+ BMP_HEIGHT, BKG);
   }
 
   color = PEN;
