@@ -148,7 +148,7 @@ typedef struct
 #define D2U_L2R  6 		// 从下到上,从左到右
 #define D2U_R2L  7		// 从下到上,从右到左
 
-#define DFT_SCAN_DIR  5  // 默认的扫描方向
+#define DFT_SCAN_DIR  6  // 默认的扫描方向
 
 // 画笔颜色
 #define WHITE         0xFFFF
