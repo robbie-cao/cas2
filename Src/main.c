@@ -74,9 +74,9 @@
 
 #include "led.h"
 
-#define KEY_RIGHT        HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_11)
-#define KEY_LEFT         HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_13)
-#define KEY_CENTER       HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_12)
+#define KEY_RIGHT        HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_12)
+#define KEY_LEFT         HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_11)
+#define KEY_CENTER       HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_13)
 
 typedef enum Screen_Update_Mode
 {
