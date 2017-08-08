@@ -576,7 +576,7 @@ void LCD_ShowBMPDigit(u16 x, u16 y, u8 num, Font_t *font, uint16_t color)
    }
    else
    {
-       font->data =&white_digt[num][0];
+       font->data =&pen_digt[num][0];
    }
   }
   LCD_ShowImage(x, y, width, height, (uint8_t *)font->data);
