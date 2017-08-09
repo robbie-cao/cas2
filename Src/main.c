@@ -351,7 +351,7 @@ int main(void)
   PM25_StartMeasurement();
   HAL_Delay(100);
 
- 
+
   /*##-2- Start the TIM Base generation in interrupt mode ####################*/
   /* Start Channel1 */
 
@@ -811,9 +811,15 @@ void SensorTask(void const * argument)
             sensor_data_latest.co2,
             sensor_data_latest.pm25);
 
-    LED_LEFT_TOGGLE();
-    LED_CENTER_TOGGLE();
-    LED_RIGHT_TOGGLE();
+    if (voc > TVOC_THRESHOLD || co2 > CO2_THRESHOLD || pm25 > PM25_THRESHOLD) {
+      LED_LEFT_TOGGLE();
+      LED_CENTER_TOGGLE();
+      LED_RIGHT_TOGGLE();
+    } else {
+      LED_LEFT_OFF();
+      LED_CENTER_OFF();
+      LED_RIGHT_OFF();
+    }
 
     vTaskDelay(2000);
   }
@@ -1049,11 +1055,11 @@ void UpdateSensorDataDisplay(uint8_t index_next)
       LCD_ShowChar(DIGIT_XPOS, DIGIT_YPOS, '-', 32, 1);
     }
 
-    LCD_ShowNumCenterAlign((uint16_t)display.data_to_display.temperature, &bmp_font, color); 
+    LCD_ShowNumCenterAlign((uint16_t)display.data_to_display.temperature, &bmp_font, color);
 
     break;
   case 1:
-    LCD_ShowNumCenterAlign((uint16_t)display.data_to_display.humidity, &bmp_font, color); 
+    LCD_ShowNumCenterAlign((uint16_t)display.data_to_display.humidity, &bmp_font, color);
 
     break;
   case 2:
@@ -1105,23 +1111,23 @@ void UpdateSensorDataDisplayPartial(uint8_t index_next)
       color = HON_RED;
       if (display.data_on_screen.co2 > CO2_THRESHOLD) {
 
-        LCD_UpdateNumPartialCenterAlign(display.data_to_display.co2, display.data_on_screen.co2, &bmp_font, color);       
+        LCD_UpdateNumPartialCenterAlign(display.data_to_display.co2, display.data_on_screen.co2, &bmp_font, color);
 
       } else {
 
         LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS+ BMP_HEIGHT, BKG);
-        LCD_ShowNumCenterAlign(display.data_to_display.co2, &bmp_font, color);     
+        LCD_ShowNumCenterAlign(display.data_to_display.co2, &bmp_font, color);
 
       }
     } else {
       if (display.data_on_screen.co2 > CO2_THRESHOLD) {
 
         LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS+ BMP_HEIGHT, BKG);
-        LCD_ShowNumCenterAlign(display.data_to_display.co2, &bmp_font, color);  
+        LCD_ShowNumCenterAlign(display.data_to_display.co2, &bmp_font, color);
 
       } else {
 
-        LCD_UpdateNumPartialCenterAlign(display.data_to_display.co2, display.data_on_screen.co2, &bmp_font, color);        
+        LCD_UpdateNumPartialCenterAlign(display.data_to_display.co2, display.data_on_screen.co2, &bmp_font, color);
 
       }
     }
@@ -1136,17 +1142,17 @@ void UpdateSensorDataDisplayPartial(uint8_t index_next)
       } else {
 
         LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
-        LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &bmp_font, color);       
+        LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &bmp_font, color);
 
       }
     } else {
       if (display.data_on_screen.tvoc > TVOC_THRESHOLD) {
 
         LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
-        LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &bmp_font, color);  
+        LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &bmp_font, color);
       } else {
 
-        LCD_UpdateNumPartialCenterAlign(display.data_to_display.tvoc, display.data_on_screen.tvoc, &bmp_font, color);       
+        LCD_UpdateNumPartialCenterAlign(display.data_to_display.tvoc, display.data_on_screen.tvoc, &bmp_font, color);
 
       }
     }
@@ -1157,22 +1163,22 @@ void UpdateSensorDataDisplayPartial(uint8_t index_next)
       if (display.data_on_screen.pm25 > PM25_THRESHOLD) {
 
         LCD_UpdateNumPartialCenterAlign(display.data_to_display.pm25, display.data_on_screen.pm25, &bmp_font, color);
-        
+
       } else {
 
         LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
-        LCD_ShowNumCenterAlign(display.data_to_display.pm25, &bmp_font, color);      
+        LCD_ShowNumCenterAlign(display.data_to_display.pm25, &bmp_font, color);
       }
     } else {
       if (display.data_on_screen.pm25 > PM25_THRESHOLD) {
 
         LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
-        LCD_ShowNumCenterAlign(display.data_to_display.pm25, &bmp_font, color);   
-        
+        LCD_ShowNumCenterAlign(display.data_to_display.pm25, &bmp_font, color);
+
       } else {
 
         LCD_UpdateNumPartialCenterAlign(display.data_to_display.pm25, display.data_on_screen.pm25, &bmp_font, color);
-      
+
       }
     }
     break;
@@ -1229,7 +1235,7 @@ void UpdateDisplay2(uint8_t mode, uint8_t index_curr, uint8_t index_next)
     if (display.data_to_display.tvoc > TVOC_THRESHOLD) {
       color = HON_RED;
     }
-    LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &bmp_font, color);  
+    LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &bmp_font, color);
 
     break;
   case 4:
