@@ -200,6 +200,14 @@ void SystemInit(void)
 #else
   SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
 #endif
+#if 0  //PB1 Early Init
+  GPIOB->MODER|=0x4;
+  GPIOB->OSPEEDR|=0xC;
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  GPIOB->ODR|=(1<<1);
+ 
+#endif 
+  
 }
 
 /**

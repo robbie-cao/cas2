@@ -78,6 +78,10 @@
 #define KEY_LEFT         HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_11)
 #define KEY_CENTER       HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_13)
 
+#define PSHOLD_HIGH      GPIOB->ODR|=(1<<1)
+#define PSHOLD_LOW       GPIOB->ODR&=~(1<<1)
+#define LONG_PRESS       150  
+
 typedef enum Screen_Update_Mode
 {
    FIXED_MODE = 0,
@@ -188,6 +192,13 @@ void DisplayTask(void const * argument);
 void Init_Keypad(void);
 void Keypad_handler(void);
 
+#if PWRCTRL_MIMIC
+volatile uint8_t shutdown_flag = 0;
+void system_resume(void);
+void system_shutdown(void);
+void UpdateDisplay3(uint8_t mode, uint8_t index_curr, uint8_t index_next);
+#endif
+
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 int fputc(int ch, FILE *f)
@@ -241,10 +252,45 @@ void Screen_Init(void)
   memset(&display.data_on_screen, 0, sizeof(SensorData_t));
 }
 
+#if PWRCTRL_MIMIC
+void system_shutdown(void)
+{
+  if (xSemaphoreTake(xScreenCtrlMutex, (TickType_t)10) == pdTRUE )
+  {
+    LCD_Clear(BKG);  
+    LCD_ShowImage(LOGO_XPOS, LOGO_YPOS, LOGO_WIDTH, LOGO_HEIGHT, (uint8_t*)logo);
+    HAL_Delay(1000);
+    LCD_MaskImage(LOGO_XPOS, LOGO_YPOS, LOGO_WIDTH, LOGO_HEIGHT, BKG);
+    LCD_Switch_Off();
+    xSemaphoreGive( xScreenCtrlMutex );
+  }
+}
+
+void system_resume(void)
+{
+  if (xSemaphoreTake(xScreenCtrlMutex, (TickType_t)10) == pdTRUE )
+  {
+    LCD_Clear(BKG);
+    LCD_Switch_On();
+
+    LCD_ShowImage(LOGO_XPOS, LOGO_YPOS, LOGO_WIDTH, LOGO_HEIGHT, (uint8_t*)logo);
+    HAL_Delay(2000);
+    LCD_Clear(BKG); 
+
+    display.mode=FIXED_MODE;
+    display.index_next = 0;
+    display.index_curr = 1;
+    UpdateDisplay3(display.mode, display.index_curr, display.index_next);
+
+    xSemaphoreGive( xScreenCtrlMutex );
+  }
+}
+#endif
 
 void Keypad_handler(void)
 {
-  osDelay(60);
+  uint8_t counter;
+  osDelay(50);
 
   if (KEY_RIGHT == 0)
   {
@@ -278,15 +324,40 @@ void Keypad_handler(void)
   }
   else if (KEY_CENTER == 0)
   {
-    if (xSemaphoreTake(xScreenCtrlMutex, (TickType_t)10) == pdTRUE )
+    counter= 0;
+    while((KEY_CENTER== 0)&& (counter< 0xFF))
     {
-      display.mode = !display.mode;
-      if (display.mode) {
-        HAL_TIM_Base_Start_IT(&htim3);
-      } else {
-        HAL_TIM_Base_Stop_IT(&htim3);
+      counter++;
+      osDelay(20);
+    }
+    if(counter>= LONG_PRESS)
+    {
+      PSHOLD_LOW;
+#if PWRCTRL_MIMIC
+      if(shutdown_flag == 0)
+      {
+        system_shutdown();
+        shutdown_flag= 1;
       }
-      xSemaphoreGive( xScreenCtrlMutex );
+      else
+      {
+        system_resume();
+        shutdown_flag = 0;
+      }
+#endif
+    }
+    else
+    {
+       if (xSemaphoreTake(xScreenCtrlMutex, (TickType_t)10) == pdTRUE )
+       {
+          display.mode = !display.mode;
+          if (display.mode) {
+              HAL_TIM_Base_Start_IT(&htim3);
+          } else {
+              HAL_TIM_Base_Stop_IT(&htim3);
+          }
+          xSemaphoreGive( xScreenCtrlMutex );
+       }
     }
   }
 }
@@ -329,7 +400,7 @@ int main(void)
   Comm_Init();
 
   LCD_Init();
-  LCD_BKL_SET;
+  LCD_BKL_RESET;
 
   LCD_Clear(BKG);
   POINT_COLOR = PEN;
@@ -350,6 +421,7 @@ int main(void)
   HAL_Delay(10);
   PM25_StartMeasurement();
   HAL_Delay(100);
+  
 
 
   /*##-2- Start the TIM Base generation in interrupt mode ####################*/
@@ -692,10 +764,20 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef  GPIO_InitStruct;
 
   /* GPIO Ports Clock Enable */
+
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  
+  /* Configure the PS_Hold pin */
+  GPIO_InitStruct.Pin = GPIO_PIN_1;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  PSHOLD_HIGH;
+  
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
