@@ -12,6 +12,7 @@
 #include "bwfont.h"
 #include "bnewslide.h"
 #include "bindicator.h"
+#include "bnewicon.h"
 #endif
 
 Font_t bmp_font = {
@@ -1218,23 +1219,23 @@ void LCD_ShowSlide(uint8_t index)
     uint16_t cur_xpos;
     uint8_t k;
 
-    cur_xpos=ICON_DOT_XPOS;
+    cur_xpos=ICON_BMP_XPOS;
     if(index>=0 && index<5)
     {
        for(k=0;k<5;k++)
        {
            if(index==k)
           {
-             cur_icon=(uint8_t*)icon_newsdot;
+             cur_icon=(uint8_t*)icon_newwhite[k];
            }
            else
           {
-             cur_icon=(uint8_t*)icon_newdot;
+             cur_icon=(uint8_t*)icon_newgray[k];
            }
 
-           LCD_ShowImage(cur_xpos, ICON_DOT_YPOS,
-                         ICON_DOT_WIDTH, ICON_DOT_HEIGHT, cur_icon);
-           cur_xpos+=ICON_DOT_GAP;
+           LCD_ShowImage(cur_xpos, ICON_BMP_YPOS,
+                         ICON_BMP_WIDTH, ICON_BMP_HEIGHT, cur_icon);
+           cur_xpos+=ICON_BMP_WIDTH+ICON_BMP_GAP;
        }
     }
 }

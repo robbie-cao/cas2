@@ -55,9 +55,9 @@ extern u32        BACK_COLOR;  // ±³¾°ÑÕÉ«.Ä¬ÈÏvoid LCD_ShowHonDigit(u16 x, u16 
 
 
 typedef struct {
-	uint8_t width;    
-	uint8_t height;   
-	const unsigned char *data; 
+	uint8_t width;
+	uint8_t height;
+	const unsigned char *data;
 } Font_t;
 
 
@@ -92,6 +92,12 @@ enum slide_index
 #define ICON_DOT_XPOS   180
 #define ICON_DOT_YPOS   14
 #define ICON_DOT_GAP    26
+
+#define ICON_BMP_WIDTH  40
+#define ICON_BMP_HEIGHT 40
+#define ICON_BMP_XPOS   96
+#define ICON_BMP_YPOS   12
+#define ICON_BMP_GAP    22
 
 
 #define ICON_SYMBOL_XPOS  40
