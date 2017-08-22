@@ -1246,6 +1246,7 @@ void LCD_ShowSymbol(uint8_t index)
     uint16_t cur_xpos;
     uint8_t k;
 
+#if 0
     cur_xpos=ICON_SYMBOL_XPOS;
     if(index>=0 && index<25)
     {
@@ -1313,6 +1314,47 @@ void LCD_ShowSymbol(uint8_t index)
        }
 
     }
+
+#else
+    cur_xpos = ICON_INDICATOR_XPOS;
+
+    for (k = 0; k < 15; k++)
+    {
+      if (k< 5)
+      {
+        cur_icon = (uint8_t*)dot_blue;
+        if (index == k) {
+          LCD_ShowImage(cur_xpos, ICON_INDICATOR_YPOS + ICON_INDICATOR_HEIGHT,
+                        ICON_INDICATOR_WIDTH, ICON_INDICATOR_HEIGHT, (uint8_t *) arrow_blue);
+        }
+      }
+      else if (k >= 5 && k < 10)
+      {
+        cur_icon = (uint8_t*)dot_yellow;
+        if (index == k) {
+          LCD_ShowImage(cur_xpos, ICON_INDICATOR_YPOS + ICON_INDICATOR_HEIGHT,
+                        ICON_INDICATOR_WIDTH, ICON_INDICATOR_HEIGHT, (uint8_t *) arrow_yellow);
+        }
+      }
+      else
+      {
+        cur_icon = (uint8_t*)dot_red;
+        if (index == k) {
+          LCD_ShowImage(cur_xpos, ICON_INDICATOR_YPOS + ICON_INDICATOR_HEIGHT,
+                        ICON_INDICATOR_WIDTH, ICON_INDICATOR_HEIGHT, (uint8_t *) arrow_red);
+        }
+      }
+
+      LCD_ShowImage(cur_xpos, ICON_INDICATOR_YPOS,
+                    ICON_INDICATOR_WIDTH, ICON_INDICATOR_HEIGHT, cur_icon);
+      cur_xpos += ICON_INDICATOR_WIDTH + ICON_INDICATOR_GAP;
+    }
+
+    if(index>=0 && index<15)
+    {
+    }
+
+#endif
 }
 
 void LCD_ShowDot(void)
