@@ -1321,6 +1321,14 @@ void LCD_ShowSymbol(uint8_t index)
 #else
     cur_xpos = ICON_INDICATOR_XPOS;
 
+    LCD_Fill(ICON_INDICATOR_XPOS, ICON_INDICATOR_YPOS + ICON_INDICATOR_HEIGHT,
+             ICON_INDICATOR_XPOS + ICON_INDICATOR_WIDTH * 15,ICON_INDICATOR_YPOS + ICON_INDICATOR_HEIGHT * 2,
+#if WHITE_BKG
+             WHITE
+#else
+             BLACK
+#endif
+               );
     for (k = 0; k < 15; k++)
     {
       if (k< 5)
