@@ -161,6 +161,10 @@ typedef struct LCD_Display
   Screen_Update_Mode_t  mode;
   uint8_t               index_curr;
   uint8_t               index_next;
+  uint8_t               quality_level;      // 0 - blue, 1 - yellow, 2 - red
+  uint8_t               quality_level_prev; // 0 - blue, 1 - yellow, 2 - red
+  uint8_t               symbol_level;       // 0~14
+  uint8_t               symbol_level_prev;  // 0~14
   SensorData_t          data_to_display;
   SensorData_t          data_on_screen;
 } LCD_Display_t;
@@ -198,6 +202,10 @@ void system_resume(void);
 void system_shutdown(void);
 void UpdateDisplay3(uint8_t mode, uint8_t index_curr, uint8_t index_next);
 #endif
+
+uint8_t UpdateSymbolLevel(uint8_t symbol_level);
+uint8_t UpdateQualityLevel(uint8_t symbol_level);
+
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -942,7 +950,7 @@ uint8_t DisplayDataChanged(void)
   return changed;
 }
 
-void UpdateDataToDisplay(void)
+void UpdateDataToDisplay(uint8_t index)
 {
   xSemaphoreTake(xSensorDataMutex, portMAX_DELAY);
 
@@ -951,6 +959,9 @@ void UpdateDataToDisplay(void)
   display.data_to_display.tvoc = sensor_data_latest.tvoc;
   display.data_to_display.co2 = sensor_data_latest.co2;
   display.data_to_display.pm25 = sensor_data_latest.pm25;
+
+  display.symbol_level = UpdateSymbolLevel(index);
+  display.quality_level = UpdateQualityLevel(display.symbol_level);
 
   screen[0].sensor.temp_val = sensor_data_latest.temperature;
   screen[1].sensor.humd_val = (uint16_t)sensor_data_latest.humidity;
@@ -1081,6 +1092,21 @@ uint8_t UpdateSymbolLevel(uint8_t cur_index)
   return level;
 }
 
+uint8_t UpdateQualityLevel(uint8_t symbol_level)
+{
+  uint8_t level = 0;
+
+  if (symbol_level >= 10) {
+    level = 2;
+  } else if (symbol_level >= 5) {
+    level = 1;
+  } else {
+    level = 0;
+  }
+
+  return level;
+}
+
 void UpdateDataOnScreen(uint8_t cur_index)
 {
   uint8_t level = UpdateSymbolLevel(cur_index);
@@ -1089,6 +1115,8 @@ void UpdateDataOnScreen(uint8_t cur_index)
     LCD_ShowSymbol(level);
   }
 
+  display.quality_level_prev = display.quality_level;
+  display.symbol_level_prev = display.symbol_level;
   memcpy(&display.data_on_screen, &display.data_to_display, sizeof(SensorData_t));
 }
 
@@ -1191,6 +1219,20 @@ void UpdateSensorDataDisplay(uint8_t index_next)
 {
   uint16_t color = PEN;
 
+  switch (display.quality_level) {
+  case 0:
+    color = BLUE;
+    break;
+  case 1:
+    color = YELLOW;
+    break;
+  case 2:
+    color = HON_RED;
+    break;
+  default:
+    break;
+  }
+
   switch (index_next) {
   case 0:
     if (display.data_to_display.temperature < 0 ) //Negative value
@@ -1206,26 +1248,14 @@ void UpdateSensorDataDisplay(uint8_t index_next)
 
     break;
   case 2:
-    if (display.data_to_display.co2 > CO2_THRESHOLD) {
-      color = HON_RED;
-    }
-
     LCD_ShowNumCenterAlign(display.data_to_display.co2, &bmp_font, color);
 
     break;
   case 3:
-    if (display.data_to_display.tvoc > TVOC_THRESHOLD) {
-      color = HON_RED;
-    }
-
     LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &bmp_font, color);
 
     break;
   case 4:
-    if (display.data_to_display.pm25 > PM25_THRESHOLD) {
-      color = HON_RED;
-    }
-
     LCD_ShowNumCenterAlign(display.data_to_display.pm25, &bmp_font, color);
 
     break;
@@ -1239,90 +1269,73 @@ void UpdateSensorDataDisplayPartial(uint8_t index_next)
 {
   uint16_t color = PEN;
 
+  switch (display.quality_level) {
+  case 0:
+    color = BLUE;
+    break;
+  case 1:
+    color = YELLOW;
+    break;
+  case 2:
+    color = HON_RED;
+    break;
+  default:
+    break;
+  }
+
   switch (index_next) {
   case 0:
 
-    LCD_UpdateNumPartialCenterAlign((uint16_t)display.data_to_display.temperature, (uint16_t)display.data_on_screen.temperature, &bmp_font, color);
+    if (display.quality_level == display.quality_level_prev) {
+      LCD_UpdateNumPartialCenterAlign((uint16_t)display.data_to_display.temperature, (uint16_t)display.data_on_screen.temperature, &bmp_font, color);
+    } else {
+      LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS + BMP_HEIGHT, BKG);
+      LCD_ShowNumCenterAlign((uint16_t)display.data_to_display.temperature, &bmp_font, color);
+    }
 
     break;
   case 1:
-    LCD_UpdateNumPartialCenterAlign((uint16_t)display.data_to_display.humidity, (uint16_t)display.data_on_screen.humidity, &bmp_font, color);
+    if (display.quality_level == display.quality_level_prev) {
+      LCD_UpdateNumPartialCenterAlign((uint16_t)display.data_to_display.humidity, (uint16_t)display.data_on_screen.humidity, &bmp_font, color);
+    } else {
+      LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS + BMP_HEIGHT, BKG);
+      LCD_ShowNumCenterAlign((uint16_t)display.data_to_display.humidity, &bmp_font, color);
+    }
 
     break;
   case 2:
-    if (display.data_to_display.co2 > CO2_THRESHOLD) {
-      color = HON_RED;
-      if (display.data_on_screen.co2 > CO2_THRESHOLD) {
+    if (display.quality_level == display.quality_level_prev) {
 
-        LCD_UpdateNumPartialCenterAlign(display.data_to_display.co2, display.data_on_screen.co2, &bmp_font, color);
+      LCD_UpdateNumPartialCenterAlign(display.data_to_display.co2, display.data_on_screen.co2, &bmp_font, color);
 
-      } else {
-
-        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS+ BMP_HEIGHT, BKG);
-        LCD_ShowNumCenterAlign(display.data_to_display.co2, &bmp_font, color);
-
-      }
     } else {
-      if (display.data_on_screen.co2 > CO2_THRESHOLD) {
 
-        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS+ BMP_HEIGHT, BKG);
-        LCD_ShowNumCenterAlign(display.data_to_display.co2, &bmp_font, color);
+      LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS+ BMP_HEIGHT, BKG);
+      LCD_ShowNumCenterAlign(display.data_to_display.co2, &bmp_font, color);
 
-      } else {
-
-        LCD_UpdateNumPartialCenterAlign(display.data_to_display.co2, display.data_on_screen.co2, &bmp_font, color);
-
-      }
     }
     break;
   case 3:
-    if (display.data_to_display.tvoc > TVOC_THRESHOLD) {
-      color = HON_RED;
-      if (display.data_on_screen.tvoc > TVOC_THRESHOLD) {
+    if (display.quality_level == display.quality_level_prev) {
 
-        LCD_UpdateNumPartialCenterAlign(display.data_to_display.tvoc, display.data_on_screen.tvoc, &bmp_font, color);
+      LCD_UpdateNumPartialCenterAlign(display.data_to_display.tvoc, display.data_on_screen.tvoc, &bmp_font, color);
 
-      } else {
-
-        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
-        LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &bmp_font, color);
-
-      }
     } else {
-      if (display.data_on_screen.tvoc > TVOC_THRESHOLD) {
 
-        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
-        LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &bmp_font, color);
-      } else {
+      LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
+      LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &bmp_font, color);
 
-        LCD_UpdateNumPartialCenterAlign(display.data_to_display.tvoc, display.data_on_screen.tvoc, &bmp_font, color);
-
-      }
     }
     break;
   case 4:
-    if (display.data_to_display.pm25 > PM25_THRESHOLD) {
-      color = HON_RED;
-      if (display.data_on_screen.pm25 > PM25_THRESHOLD) {
+    if (display.quality_level == display.quality_level_prev) {
 
-        LCD_UpdateNumPartialCenterAlign(display.data_to_display.pm25, display.data_on_screen.pm25, &bmp_font, color);
+      LCD_UpdateNumPartialCenterAlign(display.data_to_display.pm25, display.data_on_screen.pm25, &bmp_font, color);
 
-      } else {
-
-        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
-        LCD_ShowNumCenterAlign(display.data_to_display.pm25, &bmp_font, color);
-      }
     } else {
-      if (display.data_on_screen.pm25 > PM25_THRESHOLD) {
 
-        LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
-        LCD_ShowNumCenterAlign(display.data_to_display.pm25, &bmp_font, color);
-
-      } else {
-
-        LCD_UpdateNumPartialCenterAlign(display.data_to_display.pm25, display.data_on_screen.pm25, &bmp_font, color);
-
-      }
+      LCD_Fill(0, BMP_YPOS, 480, BMP_YPOS +BMP_HEIGHT, BKG);
+      LCD_ShowNumCenterAlign(display.data_to_display.pm25, &bmp_font, color);
     }
     break;
 
@@ -1351,6 +1364,21 @@ void UpdateDisplay2(uint8_t mode, uint8_t index_curr, uint8_t index_next)
   }
 
   color = PEN;
+
+  switch (display.quality_level) {
+  case 0:
+    color = BLUE;
+    break;
+  case 1:
+    color = YELLOW;
+    break;
+  case 2:
+    color = HON_RED;
+    break;
+  default:
+    break;
+  }
+
   switch (index_next) {
   case 0:
     if (display.data_to_display.temperature < 0 ) //Negative value
@@ -1367,24 +1395,14 @@ void UpdateDisplay2(uint8_t mode, uint8_t index_curr, uint8_t index_next)
 
     break;
   case 2:
-    if (display.data_to_display.co2 > CO2_THRESHOLD) {
-      color = HON_RED;
-    }
-
     LCD_ShowNumCenterAlign(display.data_to_display.co2, &bmp_font, color);
 
     break;
   case 3:
-    if (display.data_to_display.tvoc > TVOC_THRESHOLD) {
-      color = HON_RED;
-    }
     LCD_ShowNumCenterAlign(display.data_to_display.tvoc, &bmp_font, color);
 
     break;
   case 4:
-    if (display.data_to_display.pm25 > PM25_THRESHOLD) {
-      color = HON_RED;
-    }
 
     LCD_ShowNumCenterAlign(display.data_to_display.pm25, &bmp_font, color);
     break;
@@ -1422,9 +1440,6 @@ void DisplayTask(void const * argument)
 {
 
   /* USER CODE BEGIN 5 */
-//  UpdateDataToDisplay();
-//  UpdateDisplay(SCROLL_MODE, 0);
-//  UpdateDataOnScreen();
 
   /* Infinite loop */
   for(;;)
@@ -1441,7 +1456,7 @@ void DisplayTask(void const * argument)
 
     if (screen_index_curr == screen_index_next) {
       // Stay at one sensor and update data if changed
-      UpdateDataToDisplay();
+      UpdateDataToDisplay(screen_index_next);
       if (DisplayDataChanged()) {
         UpdateDisplay3(display_mode, screen_index_curr, screen_index_next);
         UpdateDataOnScreen(screen_index_next);
@@ -1451,7 +1466,7 @@ void DisplayTask(void const * argument)
     }
 
     // Switch sensor and update whole screen
-    UpdateDataToDisplay();
+    UpdateDataToDisplay(screen_index_next);
     UpdateDisplay2(display_mode, screen_index_curr, screen_index_next);
     UpdateDataOnScreen(screen_index_next);
 

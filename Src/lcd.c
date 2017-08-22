@@ -578,9 +578,13 @@ void LCD_ShowBMPDigit(u16 x, u16 y, u8 num, Font_t *font, uint16_t color)
    {
      font->data =&red_digit[num][0];
    }
+   else if(color==YELLOW)
+   {
+     font->data =&yellow_digit[num][0];
+   }
    else
    {
-       font->data =&blue_digit[num][0];
+     font->data =&blue_digit[num][0];
    }
   }
   LCD_ShowImage(x, y, width, height, (uint8_t *)font->data);
