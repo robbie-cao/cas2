@@ -136,9 +136,9 @@ enum slide_index
 #define LOGO_WIDTH      420
 #define LOGO_HEIGHT     72
 
-#define BMP_WIDTH      114
-#define BMP_HEIGHT     160
-#define BMP_YPOS       57
+#define BMP_WIDTH      92
+#define BMP_HEIGHT     128
+#define BMP_YPOS       70
 
 typedef struct
 {

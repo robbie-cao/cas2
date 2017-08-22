@@ -8,16 +8,19 @@
 #include "wnewslide.h"
 #include "windicator.h"
 #else
-#include "brfont.h"
-#include "bwfont.h"
+//#include "brfont.h"
+//#include "bwfont.h"
+#include "bbluefont.h"
+#include "byellowfont.h"
+#include "bredfont.h"
 #include "bnewslide.h"
 #include "bindicator.h"
 #include "bnewicon.h"
 #endif
 
 Font_t bmp_font = {
-	114,
-	160,
+	92,
+	128,
 	(unsigned char *)NULL
 };
 
@@ -573,11 +576,11 @@ void LCD_ShowBMPDigit(u16 x, u16 y, u8 num, Font_t *font, uint16_t color)
 
    if(color==HON_RED)
    {
-     font->data =&red_digt[num][0];
+     font->data =&red_digit[num][0];
    }
    else
    {
-       font->data =&pen_digt[num][0];
+       font->data =&blue_digit[num][0];
    }
   }
   LCD_ShowImage(x, y, width, height, (uint8_t *)font->data);
