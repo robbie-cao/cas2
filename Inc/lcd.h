@@ -82,10 +82,10 @@ enum slide_index
     INDEX_4 =4
 };
 
-#define ICON_SENSOR_WIDTH  200
-#define ICON_SENSOR_HEIGHT  40
-#define ICON_SENSOR_XPOS   140
-#define ICON_SENSOR_YPOS   50
+#define ICON_SENSOR_WIDTH  261
+#define ICON_SENSOR_HEIGHT  24
+#define ICON_SENSOR_XPOS   110
+#define ICON_SENSOR_YPOS   216
 
 #define ICON_DOT_WIDTH  16
 #define ICON_DOT_HEIGHT 16
@@ -130,7 +130,7 @@ enum slide_index
 
 #define BMP_WIDTH      114
 #define BMP_HEIGHT     160
-#define BMP_YPOS       110
+#define BMP_YPOS       57
 
 typedef struct
 {
