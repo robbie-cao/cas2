@@ -80,7 +80,7 @@
 
 #define PSHOLD_HIGH      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET)
 #define PSHOLD_LOW       HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET)
-#define LONG_PRESS       150  
+#define LONG_PRESS       150
 
 typedef enum Screen_Update_Mode
 {
@@ -92,7 +92,7 @@ extern Font_t bmp_font;
 
 // Assign default value for all sensors for the first time use not to be empty
 SensorData_t sensor_data_latest = {
-  25.0,         // temperature
+  75.0,         // temperature
   70.0,         // humidity
   500,          // co2
   122,          // tvoc
@@ -257,7 +257,7 @@ void system_shutdown(void)
 {
   if (xSemaphoreTake(xScreenCtrlMutex, (TickType_t)10) == pdTRUE )
   {
-    LCD_Clear(BKG);  
+    LCD_Clear(BKG);
     LCD_ShowImage(LOGO_XPOS, LOGO_YPOS, LOGO_WIDTH, LOGO_HEIGHT, (uint8_t*)logo);
     HAL_Delay(1000);
     LCD_MaskImage(LOGO_XPOS, LOGO_YPOS, LOGO_WIDTH, LOGO_HEIGHT, BKG);
@@ -275,7 +275,7 @@ void system_resume(void)
 
     LCD_ShowImage(LOGO_XPOS, LOGO_YPOS, LOGO_WIDTH, LOGO_HEIGHT, (uint8_t*)logo);
     HAL_Delay(2000);
-    LCD_Clear(BKG); 
+    LCD_Clear(BKG);
 
     display.mode=FIXED_MODE;
     display.index_next = 0;
@@ -421,7 +421,7 @@ int main(void)
   HAL_Delay(10);
   PM25_StartMeasurement();
   HAL_Delay(100);
-  
+
 
 
   /*##-2- Start the TIM Base generation in interrupt mode ####################*/
@@ -770,7 +770,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  
+
   /* Configure the PS_Hold pin */
   GPIO_InitStruct.Pin = GPIO_PIN_1;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -779,7 +779,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
   //PSHold Set to high to turn on ST6601 MOSFET
   PSHOLD_HIGH;
-  
+
   /* Configure the LCD RST pin */
   GPIO_InitStruct.Pin = LCD_RST_PIN;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -965,6 +965,7 @@ uint8_t UpdateSymbolLevel(uint8_t cur_index)
 {
   uint8_t level = 0;
 
+#if 0
   switch (cur_index) {
   case 2: // co2
     if (display.data_to_display.co2 >= CO2_THRESHOLD_MAX) {
@@ -1014,6 +1015,68 @@ uint8_t UpdateSymbolLevel(uint8_t cur_index)
   default:
     break;
   }
+
+#else
+
+  switch (cur_index) {
+  case 0: // temperature
+    if (display.data_to_display.temperature >= TEMP_LEVEL_BLUE_LOW && display.data_to_display.temperature <= TEMP_LEVEL_BLUE_HIGH)
+    {
+      level = 1;
+    }
+    else
+    {
+      level = 6;
+    }
+    break;
+  case 1: // humidity
+    if (display.data_to_display.humidity >= HUMI_LEVEL_BLUE_LOW && display.data_to_display.humidity <= HUMI_LEVEL_BLUE_HIGH)
+    {
+      level = 1;
+    }
+    else
+    {
+      level = 6;
+    }
+    break;
+  case 2: // co2
+    if (display.data_to_display.co2 >= CO2_LEVEL_MAX) {
+      level = 14;
+    } else if (display.data_to_display.co2 >= CO2_LEVEL_RED) {
+      level = 10 + (display.data_to_display.co2 - CO2_LEVEL_RED) * 4 / (CO2_LEVEL_MAX - CO2_LEVEL_RED);
+    } else if (display.data_to_display.co2 >= CO2_LEVEL_YELLOW) {
+      level = 5 + (display.data_to_display.co2 - CO2_LEVEL_YELLOW) * 4 / (CO2_LEVEL_RED - CO2_LEVEL_YELLOW);
+    } else {
+      level = 0 + (display.data_to_display.co2) * 4 / CO2_LEVEL_YELLOW;
+    }
+    break;
+  case 3: // tvoc
+    if (display.data_to_display.tvoc >= TVOC_LEVEL_MAX) {
+      level = 14;
+    } else if (display.data_to_display.tvoc >= TVOC_LEVEL_RED) {
+      level = 10 + (display.data_to_display.tvoc - TVOC_LEVEL_RED) * 4 / (TVOC_LEVEL_MAX - TVOC_LEVEL_RED);
+    } else if (display.data_to_display.tvoc >= TVOC_LEVEL_YELLOW) {
+      level = 5 + (display.data_to_display.tvoc - TVOC_LEVEL_YELLOW) * 4 / (TVOC_LEVEL_RED - TVOC_LEVEL_YELLOW);
+    } else {
+      level = 0 + (display.data_to_display.tvoc) * 4 / TVOC_LEVEL_YELLOW;
+    }
+    break;
+  case 4: // pm25
+    if (display.data_to_display.pm25 >= PM25_LEVEL_MAX) {
+      level = 14;
+    } else if (display.data_to_display.pm25 >= PM25_LEVEL_RED) {
+      level = 10 + (display.data_to_display.pm25 - PM25_LEVEL_RED) * 4 / (PM25_LEVEL_MAX - PM25_LEVEL_RED);
+    } else if (display.data_to_display.pm25 >= PM25_LEVEL_YELLOW) {
+      level = 5 + (display.data_to_display.pm25 - PM25_LEVEL_YELLOW) * 4 / (PM25_LEVEL_RED - PM25_LEVEL_YELLOW);
+    } else {
+      level = 0 + (display.data_to_display.pm25) * 4 / PM25_LEVEL_YELLOW;
+    }
+    break;
+  default:
+    break;
+  }
+
+#endif
 
   return level;
 }

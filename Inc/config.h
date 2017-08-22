@@ -57,6 +57,24 @@
 #define CO2_THRESHOLD_MAX       2000
 
 
+#define TEMP_LEVEL_BLUE_LOW   (18 * 1.8 + 32) // F
+#define TEMP_LEVEL_BLUE_HIGH  (25 * 1.8 + 32) // F
+#define HUMI_LEVEL_BLUE_LOW   40
+#define HUMI_LEVEL_BLUE_HIGH  70
+
+#define CO2_LEVEL_YELLOW  800
+#define CO2_LEVEL_RED     1500
+#define CO2_LEVEL_MAX     2000
+#define PM25_LEVEL_YELLOW 50
+#define PM25_LEVEL_RED    150
+#define PM25_LEVEL_MAX    750
+#define TVOC_LEVEL_YELLOW 300
+#define TVOC_LEVEL_RED    600
+#define TVOC_LEVEL_MAX    5000
+
+
+
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
