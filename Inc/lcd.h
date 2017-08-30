@@ -82,7 +82,11 @@ enum slide_index
     INDEX_4 =4
 };
 
+#if (WHITE_BKG==1)
+#define ICON_SENSOR_WIDTH  260
+#else
 #define ICON_SENSOR_WIDTH  261
+#endif
 #define ICON_SENSOR_HEIGHT  24
 #define ICON_SENSOR_XPOS   110
 #define ICON_SENSOR_YPOS   216

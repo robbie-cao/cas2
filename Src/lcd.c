@@ -3,10 +3,15 @@
 #include "lcd_font.h"
 
 #if (WHITE_BKG==1)
-#include "wrfont.h"
-#include "wbfont.h"
+//#include "wrfont.h"
+//#include "wbfont.h"
+#include "wbluefont.h"
+#include "wyellowfont.h"
+#include "wredfont.h"
 #include "wnewslide.h"
-#include "windicator.h"
+//#include "bindicator.h"
+#include "wdotarrow.h"
+#include "wnewicon.h"
 #else
 //#include "brfont.h"
 //#include "bwfont.h"
@@ -14,7 +19,8 @@
 #include "byellowfont.h"
 #include "bredfont.h"
 #include "bnewslide.h"
-#include "bindicator.h"
+//#include "bindicator.h"
+#include "bdotarrow.h"
 #include "bnewicon.h"
 #endif
 
