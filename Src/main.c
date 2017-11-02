@@ -295,11 +295,29 @@ void system_resume(void)
 }
 #endif
 
+extern unsigned char g_ucaSeriNo[];
+extern uint8_t temp_id_str[];
+
 void Keypad_handler(void)
 {
   uint8_t counter;
   osDelay(50);
 
+  if (KEY_RIGHT == 0 && KEY_LEFT == 0) {
+    char buf[32];
+
+    for(int i = 0; i<12; i++)
+    {
+      HEX_2_ASCII(g_ucaSeriNo[i]);
+
+      buf[2*i] = temp_id_str[0];
+      buf[2*i+1] = temp_id_str[1];
+    }
+    buf[24] = 0;
+    LCD_Clear(BKG);
+    LCD_ShowString(0, 0, 32*24, 32, 32, buf);
+    return;
+  }
   if (KEY_RIGHT == 0)
   {
     if (xSemaphoreTake(xScreenCtrlMutex, (TickType_t)10) == pdTRUE )
