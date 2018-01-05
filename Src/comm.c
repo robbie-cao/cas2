@@ -411,6 +411,7 @@ void Comm_Process(void)
   s_ulSendPtrBackup = (unsigned long)send_ptr;
 
   printf("%s\r\n", recv_comm_buf);
+  printf("Recv: 0x%02x\r\n", recv_comm_buf[0]);
 
   while(recv_len)//???
   {
@@ -508,8 +509,23 @@ void Comm_Process(void)
 void Comm_Response(void)
 {
   printf("Resp\r\n");
-  uint8_t res = HAL_UART_Transmit(&WIFI_COMM_UART, send_comm_buf, comm_send_len, 1000);
+//  uint8_t res = HAL_UART_Transmit(&WIFI_COMM_UART, send_comm_buf, comm_send_len, 1000);
+
+  send_comm_buf[0] = 0xF8;
+  send_comm_buf[1] = 'H';
+  send_comm_buf[2] = 'E';
+  send_comm_buf[3] = 'L';
+  send_comm_buf[4] = 'L';
+  send_comm_buf[5] = 'O';
+  send_comm_buf[6] = 0x8F;
+  uint8_t res = HAL_UART_Transmit(&WIFI_COMM_UART, send_comm_buf, 7, 1000);
+
+//  sprintf(send_comm_buf, "Hello\r\n");
+//  comm_send_len = strlen("Hello\r\n");
+//  uint8_t res = HAL_UART_Transmit(&WIFI_COMM_UART, "Hello\r\n", 7, 1000);
+
   printf("%d - %d: %s\r\n", res, comm_send_len, send_comm_buf);
+  printf("0x%02x\r\n", send_comm_buf[0]);
   comm_send_len = 0;
 }
 

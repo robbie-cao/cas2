@@ -103,6 +103,10 @@ SensorData_t sensor_data_latest = {
 SensorData_t sensor_data_old;
 SensorData_t sensor_data_display;
 
+uint16_t pm25_threshold = PM25_THRESHOLD;
+uint16_t tvoc_threshold = TVOC_THRESHOLD;
+uint16_t co2_threshold = CO2_THRESHOLD;
+
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -844,20 +848,85 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+char json_str[256];
+
+void UpdateData2Azure(void)
+{
+    char buf[32];
+
+    for(int i = 0; i<12; i++)
+    {
+      HEX_2_ASCII(g_ucaSeriNo[i]);
+
+      buf[2*i] = temp_id_str[0];
+      buf[2*i+1] = temp_id_str[1];
+    }
+    buf[24] = 0;
+
+    char *p = json_str;
+    uint8_t len = 0;
+    //const char *str = "{\"device_id\":\"iaq-test-device-3162\",\"device_type\":\"iaqsensor\",\"co2\":570,\"humidity\":50,\"pm25\":1.0,\"temperature\":85.46,\"tvoc\":150}";
+    //const char *str = "{\"abc\":\"12345678\"}";
+    sprintf(p, "{");
+    p = json_str + strlen(json_str);
+    sprintf(p, "\"device_id\":\"%s\",", buf);
+    p = json_str + strlen(json_str);
+    sprintf(p, "\"device_type\":\"%s\",", "iaqsensor");
+    p = json_str + strlen(json_str);
+    sprintf(p, "\"co2\":%d,", sensor_data_latest.co2);
+    p = json_str + strlen(json_str);
+    sprintf(p, "\"humidity\":%.1f,", sensor_data_latest.humidity);
+    p = json_str + strlen(json_str);
+    sprintf(p, "\"pm25\":%d,", sensor_data_latest.pm25);
+    p = json_str + strlen(json_str);
+    sprintf(p, "\"temperature\":%.1f,", sensor_data_latest.temperature);
+    p = json_str + strlen(json_str);
+    sprintf(p, "\"tvoc\":%d", sensor_data_latest.tvoc);
+    p = json_str + strlen(json_str);
+    sprintf(p, "}");
+    p = json_str + strlen(json_str);
+}
+
 void CommTask(void const * argument)
 {
   HAL_UART_Receive_IT(&WIFI_COMM_UART, &one_byte, 1);
   /* Infinite loop */
   for(;;)
   {
-    if(comm_rcv_flag)
-    {
-      Comm_Process();
-      comm_rcv_flag = 0;
-      Comm_Response();
-    } else {
-      vTaskDelay(10);
-    }
+//    if(comm_rcv_flag)
+//    {
+//      Comm_Process();
+//      comm_rcv_flag = 0;
+//      Comm_Response();
+//    } else {
+//      vTaskDelay(10);
+//    }
+
+
+// - Test Start -
+
+//    send_comm_buf[0] = 0xF8;
+//    send_comm_buf[1] = 'H';
+//    send_comm_buf[2] = 'E';
+//    send_comm_buf[3] = 'L';
+//    send_comm_buf[4] = 'L';
+//    send_comm_buf[5] = 'O';
+//    send_comm_buf[6] = 0x8F;
+    uint8_t *p = send_comm_buf;
+    uint8_t len = 0;
+    //const char *str = "{\"device_id\":\"iaq-test-device-3162\",\"device_type\":\"iaqsensor\",\"co2\":570,\"humidity\":50,\"pm25\":1.0,\"temperature\":85.46,\"tvoc\":150}";
+    //const char *str = "{\"abc\":\"12345678\"}";
+    UpdateData2Azure();
+    *p = 0xF8;  // Start char
+    p += 1;
+    sprintf(p, "%s", json_str);
+    p += strlen(json_str);
+    *p = 0x8F;  // End char
+    len = strlen(json_str) + 2;
+    uint8_t res = HAL_UART_Transmit(&WIFI_COMM_UART, send_comm_buf, len, 2000);
+    vTaskDelay(3000);
+// - Test End -
+
   }
 }
 
@@ -910,14 +979,14 @@ void SensorTask(void const * argument)
     sensor_data_latest.pm25 = pm25;
     xSemaphoreGive(xSensorDataMutex);
 
-    printf("T: %.1f, H: %.1f, V: %d, CO2: %d, PM25: %d\r\n",
-            sensor_data_latest.temperature,
-            sensor_data_latest.humidity,
-            sensor_data_latest.tvoc,
-            sensor_data_latest.co2,
-            sensor_data_latest.pm25);
+//    printf("T: %.1f, H: %.1f, V: %d, CO2: %d, PM25: %d\r\n",
+//            sensor_data_latest.temperature,
+//            sensor_data_latest.humidity,
+//            sensor_data_latest.tvoc,
+//            sensor_data_latest.co2,
+//            sensor_data_latest.pm25);
 
-    if (voc > TVOC_THRESHOLD || co2 > CO2_THRESHOLD || pm25 > PM25_THRESHOLD) {
+    if (voc > tvoc_threshold || co2 > co2_threshold || pm25 > pm25_threshold) {
       LED_LEFT_TOGGLE();
       LED_CENTER_TOGGLE();
       LED_RIGHT_TOGGLE();
@@ -1559,6 +1628,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 
 }
 
+static uint8_t start_flag = 0;
 /**
   * @brief  Rx Transfer completed callback
   * @param  UartHandle: UART handle
@@ -1570,8 +1640,77 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
   if (UartHandle->Instance == WIFI_COMM_UART.Instance) {
     /* Set transmission flag: transfer complete*/
-    printf("%c", one_byte);
-    if(!comm_rcv_flag)
+    //printf("%c", one_byte);
+
+//    if(!comm_rcv_flag)
+//    {
+//      recv_comm_buf[recv_comm_idx++] = one_byte;
+//      if(recv_comm_idx == COMM_RECV_BUF_MAX)
+//      {
+//        recv_comm_idx = 0;
+//      }
+//    }
+//    start_rcv_timer = 1;
+//    rcv_tim_delay = 0;
+
+    if ( one_byte == 0xF8 )
+    {
+      start_flag = 1;
+      recv_comm_idx = 0;
+    }
+    else if ( one_byte == 0x8F && start_flag )
+    {
+      char *p;
+      uint16_t setting = 0;
+
+      // echo string back for test
+      // send the data to cloud in app
+      recv_comm_buf[recv_comm_idx] = '\0';
+      printf("Recv: %s\r\n", recv_comm_buf);
+      // flag for comm task to handle received data
+      comm_rcv_flag = 1;
+      if (recv_comm_buf[0] == 'T') {
+        p = (char *)recv_comm_buf + 1;
+        setting = atoi(p);
+        printf("Set: T - %d\r\n", setting);
+      }
+      if (recv_comm_buf[0] == 'H') {
+        p = (char *)recv_comm_buf + 1;
+        setting = atoi(p);
+        printf("Set: H - %d\r\n", setting);
+      }
+      if (recv_comm_buf[0] == 'C') {
+        p = (char *)recv_comm_buf + 1;
+        setting = atoi(p);
+        printf("Set: C - %d\r\n", setting);
+        if (setting > 0) {
+          co2_threshold = setting;
+        }
+      }
+      if (recv_comm_buf[0] == 'V') {
+        p = (char *)recv_comm_buf + 1;
+        setting = atoi(p);
+        printf("Set: V - %d\r\n", setting);
+        if (setting > 0) {
+          tvoc_threshold = setting;
+        }
+      }
+      if (recv_comm_buf[0] == 'P') {
+        p = (char *)recv_comm_buf + 1;
+        setting = atoi(p);
+        printf("Set: P - %d\r\n", setting);
+        if (setting > 0) {
+          pm25_threshold = setting;
+        }
+      }
+
+      // reset receiving flag
+      start_flag = 0;
+      recv_comm_idx = 0;
+    }
+    // store receive data into buffer
+    // ignore data if no leading char for start
+    else if ( start_flag )
     {
       recv_comm_buf[recv_comm_idx++] = one_byte;
       if(recv_comm_idx == COMM_RECV_BUF_MAX)
@@ -1579,8 +1718,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
         recv_comm_idx = 0;
       }
     }
-    start_rcv_timer = 1;
-    rcv_tim_delay = 0;
+
     HAL_UART_Receive_IT(&WIFI_COMM_UART, &one_byte, 1);
   }
 
