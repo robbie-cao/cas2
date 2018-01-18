@@ -125,6 +125,7 @@ osThreadId defaultTaskHandle;
 osThreadId sensorTaskHandle;
 osThreadId commTaskHandle;
 osThreadId displayTaskHandle;
+osThreadId purifierTaskHandle;
 
 uint32_t tim3_count = 0;
 
@@ -192,6 +193,7 @@ static void MX_TIM3_Init(void);
 void StartDefaultTask(void const * argument);
 void SensorTask(void const * argument);
 void CommTask(void const * argument);
+void PurifierTask(void const * argument);
 void DisplayTask(void const * argument);
 void Init_Keypad(void);
 void Keypad_handler(void);
@@ -213,7 +215,9 @@ int fputc(int ch, FILE *f)
 {
   /* Place your implementation of fputc here */
   /* e.g. write a character to the USART1 and Loop until the end of transmission */
+#if 0
   HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
+#endif
 
   return ch;
 }
@@ -483,6 +487,9 @@ int main(void)
   osThreadDef(commTask, CommTask, osPriorityNormal, 0, 128);
   commTaskHandle = osThreadCreate(osThread(commTask), NULL);
 
+  osThreadDef(purifierTask, PurifierTask, osPriorityNormal, 0, 128);
+  purifierTaskHandle = osThreadCreate(osThread(purifierTask), NULL);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -663,7 +670,8 @@ static void MX_USART1_UART_Init(void)
 {
 
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+//  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 9600;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -858,6 +866,44 @@ void CommTask(void const * argument)
     } else {
       vTaskDelay(10);
     }
+  }
+}
+
+void PurifierTask(void const * argument)
+{
+  uint8_t data[16];
+
+  /* Infinite loop */
+  for(;;)
+  {
+    data[0] = (sensor_data_latest.pm25 >> 8) & 0xFF;
+    data[1] = (sensor_data_latest.pm25) & 0xFF;
+#if 0
+    data[2] = (sensor_data_latest.tvoc >> 8) & 0xFF;
+    data[3] = (sensor_data_latest.tvoc) & 0xFF;
+#else
+    data[2] = (sensor_data_latest.co2 >> 8) & 0xFF;
+    data[3] = (sensor_data_latest.co2) & 0xFF;
+#endif
+    data[4] = (((uint16_t)(sensor_data_latest.temperature * 10)) >> 8) & 0xFF;
+    data[5] = (((uint16_t)(sensor_data_latest.temperature * 10))) & 0xFF;
+    data[6] = (((uint16_t)(sensor_data_latest.humidity))) & 0xFF;
+
+    if (sensor_data_latest.co2 > 1200 || sensor_data_latest.tvoc > 900 || sensor_data_latest.pm25 > 150) {
+    data[7] = 3;  // 0 - off, 1 - low, 2 - mid, 3 - high
+    } else if (sensor_data_latest.co2 > 900 || sensor_data_latest.tvoc > 600 || sensor_data_latest.pm25 > 100) {
+    data[7] = 2;  // 0 - off, 1 - low, 2 - mid, 3 - high
+    } else if (sensor_data_latest.co2 > 600 || sensor_data_latest.tvoc > 300 || sensor_data_latest.pm25 > 50) {
+    data[7] = 1;  // 0 - off, 1 - low, 2 - mid, 3 - high
+    } else {
+    data[7] = 0;  // 0 - off, 1 - low, 2 - mid, 3 - high
+    }
+
+    // checksum
+    data[8] = (data[0] + data[1] + data[2] + data[3] + data[4] + data[5] + data[6] + data[7]) % 256;
+
+    HAL_UART_Transmit(&huart1, data, 9, 0xFFFF);
+    vTaskDelay(5000);
   }
 }
 
