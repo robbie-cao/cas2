@@ -872,19 +872,30 @@ void CommTask(void const * argument)
 void PurifierTask(void const * argument)
 {
   uint8_t data[16];
+  uint8_t count = 0;
 
   /* Infinite loop */
   for(;;)
   {
+    count++;
     data[0] = (sensor_data_latest.pm25 >> 8) & 0xFF;
     data[1] = (sensor_data_latest.pm25) & 0xFF;
-#if 0
+//#if 0
+//    data[2] = (sensor_data_latest.tvoc >> 8) & 0xFF;
+//    data[3] = (sensor_data_latest.tvoc) & 0xFF;
+//#else
+//    data[2] = (sensor_data_latest.co2 >> 8) & 0xFF;
+//    data[3] = (sensor_data_latest.co2) & 0xFF;
+//#endif
+
+    if (count >= 3) {
     data[2] = (sensor_data_latest.tvoc >> 8) & 0xFF;
     data[3] = (sensor_data_latest.tvoc) & 0xFF;
-#else
+    if (count > 6) count = 0;
+    } else {
     data[2] = (sensor_data_latest.co2 >> 8) & 0xFF;
     data[3] = (sensor_data_latest.co2) & 0xFF;
-#endif
+    }
     data[4] = (((uint16_t)(sensor_data_latest.temperature * 10)) >> 8) & 0xFF;
     data[5] = (((uint16_t)(sensor_data_latest.temperature * 10))) & 0xFF;
     data[6] = (((uint16_t)(sensor_data_latest.humidity))) & 0xFF;
@@ -903,7 +914,8 @@ void PurifierTask(void const * argument)
     data[8] = (data[0] + data[1] + data[2] + data[3] + data[4] + data[5] + data[6] + data[7]) % 256;
 
     HAL_UART_Transmit(&huart1, data, 9, 0xFFFF);
-    vTaskDelay(5000);
+    HAL_UART_Transmit(&huart6, data, 9, 0xFFFF);
+    vTaskDelay(3000);
   }
 }
 
